@@ -1,0 +1,70 @@
+---
+title: "Vevea & Hedges selection model"
+author: "James E. Pustejovsky"
+date: "September 12, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Vevea & Hedges (1995) developed a selection model for random effects meta-analysis (and meta-regression), which models a potential mechanism for publication bias based on a step function for the probability that significant results are published. The model has two components: a model for the effect size measurement process and a model for the reporting/publication process. Let me start by laying out the model (with some slight tweaks to Vevea and Hedges' notation).
+
+We begin with a set of $k^*$ effect size estimates, $T^*_1,...,T^*_{k^*}$ with known sampling variances $\sigma_i^2$, $i = 1,...,k^*$. Each effect size estimate also has a set of characteristics captured by a row-vector of $p$ covariates $\mathbf{x}_i$, again for $i = 1,...,k^*$. The effect size measurement process is simply a random effects meta-regression, in which: 
+$$
+T_h^* \sim N( \mathbf{x}_h \boldsymbol\beta, \ \tau^2 + \sigma_h^2),
+$$
+where $\boldsymbol\beta$ is a $p \times 1$ vector of regression coefficients and $\tau^2$ is between-study variance in the effect size estimands. 
+
+The second component is a model for the process by which these effect size estimates are reported or published. 
+We assume that this process is driven by the direction and statistical significance of the estimates, as summarized in the one-sided p-values corresponding to each estimate. 
+The one-sided p-value corresponding to study $h$ is $p_h = 1 - \Phi\left(T_h^* / sigma_h\right)$, where $\Phi$ is the standard normal cumulative distribution function. The selection model takes the form of a step function in the one-side p-values, with changes in level at a defined set of $q \geq 1$ steps, $a_1,...,a_q$, where $0 < a_j < 1$ for $j = 1,...,q$. Let $\boldsymbol\omega = (\omega_1,...,\omega_q)$ be a $q \times 1$ vector of weights, where $\omega_j \geq 0$ for $j = 1,...,q$. Define
+
+$$
+w\left(p_h\right) = \begin{cases} 
+1 & \text{if} \quad 0 < p_h \leq a_1 \\ 
+\omega_j & \text{if} \quad a_j < p_h \leq a_{j+1} \\
+\omega_q & \text{if} \quad a_q < p_h \leq 1
+\end{cases}
+$$
+It is assumed that the effect size $T^*_h$ is observed with probability $w(p_h)$ and censored with probability $1 - w(p_h)$. Note that the step function can be written in terms of the effect size estimates and sampling variances
+
+$$
+w\left(T, \ \sigma^2\right) = \begin{cases} 
+1 & \text{if} \quad -\sigma \Phi^{-1}(a_1) < T \\ 
+\omega_j & \text{if} \quad -\sigma \Phi^{-1}(a_{j + 1}) < T \leq -\sigma \Phi^{-1}(a_j) \\
+\omega_q & \text{if} \quad T \leq -\sigma \Phi^{-1}(a_q)
+\end{cases}
+$$
+For notational convenience, let $\omega_0 = 1$, $a_0 = 0$, and $a_{q + 1} = 1$. 
+
+Let $T_1,...,T_k$ correspond to the observed effect sizes, with corresponding sampling variances $\sigma_1^2,...,\sigma_k^2$. Let $\phi()$ denote the standard normal density. The distribution of the observed effect sizes is a distortion of the normal distribution, given by 
+
+$$
+f\left(\left. T_i \right| \boldsymbol\beta, \tau^2, \boldsymbol\omega\right) = \frac{w(T_i, \sigma_i^2) \phi\left(\frac{T_i - \mathbf{x}_i \boldsymbol\beta}{\sqrt{\tau^2 + \sigma_i^2}}\right)}{\sqrt{\tau^2 + \sigma_i^2} A(\mathbf{x}_i \boldsymbol\beta, \tau^2, \boldsymbol\omega)}.
+$$
+
+$A(\mathbf{x}_i \boldsymbol\beta, \tau^2, \boldsymbol\omega)$ is a normalizing constant given by 
+
+$$
+A(\mathbf{x}_i \boldsymbol\beta, \tau^2, \boldsymbol\omega) = \sum_{j = 0}^q \omega_j B_{ij} \left(\mathbf{x}_i \boldsymbol\beta, \tau^2\right),
+$$
+
+where 
+
+$$
+B_{ij}\left(\mathbf{x}_i \boldsymbol\beta, \tau^2\right) = \Phi\left(\frac{-\sigma_i\Phi^{-1}(a_j) - \mathbf{x}_i \boldsymbol\beta}{\sqrt{\tau^2 + \sigma_i^2}}\right) - \Phi\left(\frac{-\sigma_i\Phi^{-1}(a_{j+1}) - \mathbf{x}_i \boldsymbol\beta}{\sqrt{\tau^2 + \sigma_i^2}}\right).
+$$
+
+In the simple case where the effect size estimates are mutually independent, we then have joint likelihood
+
+$$
+\mathcal{L}\left(\boldsymbol\beta, \tau^2, \boldsymbol\omega\right) = \prod_{i=1}^k \frac{w(T_i, \sigma_i^2) \phi\left(\frac{T_i - \mathbf{x}_i \boldsymbol\beta}{\sqrt{\tau^2 + \sigma_i^2}}\right)}{\sqrt{\tau^2 + \sigma_i^2} A(\mathbf{x}_i \boldsymbol\beta, \tau^2, \boldsymbol\omega)},
+$$
+
+and log-likelihood proportional to 
+
+$$
+l\left(\boldsymbol\beta, \tau^2, \boldsymbol\omega\right) = \sum_{i=1}^k \ln w(T_i, \sigma_i^2) - \frac{1}{2} \sum_{i=1}^k \frac{\left(T_i - \mathbf{x}_i \boldsymbol\beta\right)^2}{\tau^2 + \sigma_i^2} - \frac{1}{2}\sum_{i=1}^n \ln\left(\tau^2 + \sigma_i^2\right) - \sum_{i=1}^n \ln\left( \sum_{j=1}^q  \omega_j B_{ij}\left(\mathbf{x}_i \boldsymbol\beta, \tau^2\right) \right).
+$$
