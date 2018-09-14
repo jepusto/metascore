@@ -19,7 +19,7 @@ where $\boldsymbol\beta$ is a $p \times 1$ vector of regression coefficients and
 
 The second component is a model for the process by which these effect size estimates are reported or published. 
 We assume that this process is driven by the direction and statistical significance of the estimates, as summarized in the one-sided p-values corresponding to each estimate. 
-The one-sided p-value corresponding to study $h$ is $p_h = 1 - \Phi\left(T_h^* / sigma_h\right)$, where $\Phi$ is the standard normal cumulative distribution function. The selection model takes the form of a step function in the one-side p-values, with changes in level at a defined set of $q \geq 1$ steps, $a_1,...,a_q$, where $0 < a_j < 1$ for $j = 1,...,q$. Let $\boldsymbol\omega = (\omega_1,...,\omega_q)$ be a $q \times 1$ vector of weights, where $\omega_j \geq 0$ for $j = 1,...,q$. Define
+The one-sided p-value corresponding to study $h$ is $p_h = 1 - \Phi\left(T_h^* / \sigma_h\right)$, where $\Phi$ is the standard normal cumulative distribution function. The selection model takes the form of a step function in the one-side p-values, with changes in level at a defined set of $q \geq 1$ steps, $a_1,...,a_q$, where $0 < a_j < 1$ for $j = 1,...,q$. Let $\boldsymbol\omega = (\omega_1,...,\omega_q)$ be a $q \times 1$ vector of weights, where $\omega_j \geq 0$ for $j = 1,...,q$. Define
 
 $$
 w\left(p_h\right) = \begin{cases} 
@@ -66,5 +66,29 @@ $$
 and log-likelihood proportional to 
 
 $$
-l\left(\boldsymbol\beta, \tau^2, \boldsymbol\omega\right) = \sum_{i=1}^k \ln w(T_i, \sigma_i^2) - \frac{1}{2} \sum_{i=1}^k \frac{\left(T_i - \mathbf{x}_i \boldsymbol\beta\right)^2}{\tau^2 + \sigma_i^2} - \frac{1}{2}\sum_{i=1}^n \ln\left(\tau^2 + \sigma_i^2\right) - \sum_{i=1}^n \ln\left( \sum_{j=1}^q  \omega_j B_{ij}\left(\mathbf{x}_i \boldsymbol\beta, \tau^2\right) \right).
+l\left(\boldsymbol\beta, \tau^2, \boldsymbol\omega\right) = \sum_{i=1}^k \ln w(T_i, \sigma_i^2) - \frac{1}{2} \sum_{i=1}^k \frac{\left(T_i - \mathbf{x}_i \boldsymbol\beta\right)^2}{\tau^2 + \sigma_i^2} - \frac{1}{2}\sum_{i=1}^k \ln\left(\tau^2 + \sigma_i^2\right) - \sum_{i=1}^k \ln\left( \sum_{j=0}^q  \omega_j B_{ij}\left(\mathbf{x}_i \boldsymbol\beta, \tau^2\right) \right).
 $$
+
+# Score function
+
+Vevea and Hedges (1995) provide expressions for the score function, which is the derivative of the log likelihood with respect to the parameter vector. Let $c_j = \sum_{i=1}^k I(a_j < p_i < a_{j+1})$ denote the number of observed p-values falling within each level of the step function. 
+
+To calculate the scores, we will need the derivatives of $B_{im}$ with respect to $\boldsymbol\beta$ and $\tau^2$. Letting $b_{im} = -\sigma_i \Phi^{-1}(a_j) - \mathbf{x}_i \boldsymbol\beta$, we have
+
+$$
+\begin{aligned}
+\frac{\partial B_{im}}{\partial \beta_j} &= \frac{x_{ij}}{\sqrt{\tau^2 + \sigma_i^2}}\left[\phi\left(\frac{b_{i(m+1)}}{\sqrt{\tau^2 + \sigma_i^2}}\right) - \phi\left(\frac{b_{im}}{\sqrt{\tau^2 + \sigma_i^2}}\right) \right] \\
+\frac{\partial B_{im}}{\partial \tau^2} &= \frac{b_{i(m+1)}}{\left(\tau^2 + \sigma_i^2\right)^{3/2}} \phi\left(\frac{b_{i(m + 1)}}{\sqrt{\tau^2 + \sigma_i^2}}\right) - \frac{b_{im}}{\left(\tau^2 + \sigma_i^2\right)^{3/2}}\phi\left(\frac{b_{im}}{\sqrt{\tau^2 + \sigma_i^2}}\right)
+\end{aligned}
+$$
+
+The scores are then as follows:
+$$
+\begin{aligned}
+\frac{\partial l}{\partial \beta_j} &= \sum_{i=1}^k \frac{x_{ij} \left(T_i - \mathbf{x}_i \boldsymbol\beta\right)}{\tau^2 + \sigma_i^2} - \sum_{i=1}^k \frac{\displaystyle{\sum_{m=0}^q \omega_m \frac{\partial B_{im}}{\partial \beta_j}}}{\displaystyle{\sum_{m=0}^q} \omega_m B_{im}} \\
+\frac{\partial l}{\partial \tau^2} &= \frac{1}{2}\sum_{i=1}^k \frac{\left(T_i - \mathbf{x}_i \boldsymbol\beta\right)^2}{\left(\tau^2 + \sigma_i^2\right)^2} - \frac{1}{2}\sum_{i=1}^k \frac{1}{\tau^2 + \sigma_i^2} - \sum_{i=1}^k \frac{\displaystyle{\sum_{m=0}^q \omega_m \frac{\partial B_{im}}{\partial \tau^2}}}{\displaystyle{\sum_{m=0}^q} \omega_m B_{im}} \\
+\frac{\partial l}{\partial \omega_j} &= \frac{c_j}{\omega_j} - \sum_{i=1}^k \frac{B_{ij}}{\displaystyle{\sum_{m=0}^q \omega_m B_{im}}}
+\end{aligned}
+$$
+
+
