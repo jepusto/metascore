@@ -66,28 +66,29 @@ $$
 and log-likelihood proportional to 
 
 $$
-l\left(\boldsymbol\beta, \tau^2, \boldsymbol\omega\right) = \sum_{i=1}^k \ln w(T_i, \sigma_i^2) - \frac{1}{2} \sum_{i=1}^k \frac{\left(T_i - \mathbf{x}_i \boldsymbol\beta\right)^2}{\tau^2 + \sigma_i^2} - \frac{1}{2}\sum_{i=1}^k \ln\left(\tau^2 + \sigma_i^2\right) - \sum_{i=1}^k \ln\left( \sum_{j=0}^q  \omega_j B_{ij}\left(\mathbf{x}_i \boldsymbol\beta, \tau^2\right) \right).
+l\left(\boldsymbol\beta, \tau^2, \boldsymbol\omega\right) = \sum_{i=1}^k \ln w(T_i, \sigma_i^2) - \frac{1}{2} \sum_{i=1}^k \frac{\left(T_i - \mathbf{x}_i \boldsymbol\beta\right)^2}{\tau^2 + \sigma_i^2} - \frac{1}{2}\sum_{i=1}^k \ln\left(\tau^2 + \sigma_i^2\right) - \sum_{i=1}^k \ln A(\mathbf{x}_i \boldsymbol\beta, \tau^2, \boldsymbol\omega).
 $$
 
 # Score function
 
 Vevea and Hedges (1995) provide expressions for the score function, which is the derivative of the log likelihood with respect to the parameter vector. Let $c_j = \sum_{i=1}^k I(a_j < p_i < a_{j+1})$ denote the number of observed p-values falling within each level of the step function. 
 
-To calculate the scores, we will need the derivatives of $B_{im}$ with respect to $\boldsymbol\beta$ and $\tau^2$. Letting $b_{im} = -\sigma_i \Phi^{-1}(a_j) - \mathbf{x}_i \boldsymbol\beta$, we have
+To calculate the scores, we will need the derivatives of $A_i = A(\mathbf{x}_i \boldsymbol\beta, \tau^2, \boldsymbol\omega)$ with respect to $\boldsymbol\beta$ and $\tau^2$. Letting $b_{im} = -\sigma_i \Phi^{-1}(a_j) - \mathbf{x}_i \boldsymbol\beta$ and $\eta_i^2 = \tau^2 + \sigma_i^2$, we have
 
 $$
 \begin{aligned}
-\frac{\partial B_{im}}{\partial \beta_j} &= \frac{x_{ij}}{\sqrt{\tau^2 + \sigma_i^2}}\left[\phi\left(\frac{b_{i(m+1)}}{\sqrt{\tau^2 + \sigma_i^2}}\right) - \phi\left(\frac{b_{im}}{\sqrt{\tau^2 + \sigma_i^2}}\right) \right] \\
-\frac{\partial B_{im}}{\partial \tau^2} &= \frac{b_{i(m+1)}}{\left(\tau^2 + \sigma_i^2\right)^{3/2}} \phi\left(\frac{b_{i(m + 1)}}{\sqrt{\tau^2 + \sigma_i^2}}\right) - \frac{b_{im}}{\left(\tau^2 + \sigma_i^2\right)^{3/2}}\phi\left(\frac{b_{im}}{\sqrt{\tau^2 + \sigma_i^2}}\right)
+\frac{\partial A_i}{\partial \boldsymbol\beta} &= \frac{\mathbf{x}_i'}{\eta_i}\sum_{j=0}^q \omega_j \left[\phi\left(\frac{b_{i(j+1)}}{\eta_i}\right) - \phi\left(\frac{b_{ij}}{\eta_i}\right) \right] \\
+\frac{\partial A_i}{\partial \tau^2} &= \sum_{j=0}^q \omega_j \left[ \frac{b_{i(j+1)}}{\eta_i^3} \phi\left(\frac{b_{i(j + 1)}}{\eta_i}\right) - \frac{b_{ij}}{\eta_i^3}\phi\left(\frac{b_{ij}}{\eta_i}\right) \right]
 \end{aligned}
 $$
 
 The scores are then as follows:
+
 $$
 \begin{aligned}
-\frac{\partial l}{\partial \beta_j} &= \sum_{i=1}^k \frac{x_{ij} \left(T_i - \mathbf{x}_i \boldsymbol\beta\right)}{\tau^2 + \sigma_i^2} - \sum_{i=1}^k \frac{\displaystyle{\sum_{m=0}^q \omega_m \frac{\partial B_{im}}{\partial \beta_j}}}{\displaystyle{\sum_{m=0}^q} \omega_m B_{im}} \\
-\frac{\partial l}{\partial \tau^2} &= \frac{1}{2}\sum_{i=1}^k \frac{\left(T_i - \mathbf{x}_i \boldsymbol\beta\right)^2}{\left(\tau^2 + \sigma_i^2\right)^2} - \frac{1}{2}\sum_{i=1}^k \frac{1}{\tau^2 + \sigma_i^2} - \sum_{i=1}^k \frac{\displaystyle{\sum_{m=0}^q \omega_m \frac{\partial B_{im}}{\partial \tau^2}}}{\displaystyle{\sum_{m=0}^q} \omega_m B_{im}} \\
-\frac{\partial l}{\partial \omega_j} &= \frac{c_j}{\omega_j} - \sum_{i=1}^k \frac{B_{ij}}{\displaystyle{\sum_{m=0}^q \omega_m B_{im}}}
+\frac{\partial l}{\partial \boldsymbol\beta} &= \sum_{i=1}^k \frac{\mathbf{x}_i' \left(T_i - \mathbf{x}_i \boldsymbol\beta\right)}{\eta_i^2} - \sum_{i=1}^k \frac{\partial A_i / \partial \boldsymbol\beta}{A_i} \\
+\frac{\partial l}{\partial \tau^2} &= \frac{1}{2}\sum_{i=1}^k \frac{\left(T_i - \mathbf{x}_i \boldsymbol\beta\right)^2}{\eta_i^4} - \frac{1}{2}\sum_{i=1}^k \frac{1}{\eta_i^2} - \sum_{i=1}^k \frac{\partial A_i/ \partial \tau^2}{A_i} \\
+\frac{\partial l}{\partial \omega_j} &= \frac{c_j}{\omega_j} - \sum_{i=1}^k \frac{B_{ij}}{A_i}
 \end{aligned}
 $$
 
