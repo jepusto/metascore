@@ -11,7 +11,7 @@ knitr::opts_chunk$set(echo = TRUE)
 
 Vevea & Hedges (1995) developed a selection model for random effects meta-analysis (and meta-regression), which models a potential mechanism for publication bias based on a step function for the probability that significant results are published. The model has two components: a model for the effect size measurement process and a model for the reporting/publication process. Let me start by laying out the model (with some slight tweaks to Vevea and Hedges' notation).
 
-We begin with a set of $k^*$ effect size estimates, $T^*_1,...,T^*_{k^*}$ with known sampling variances $\sigma_i^2$, $i = 1,...,k^*$. Each effect size estimate also has a set of characteristics captured by a row-vector of $p$ covariates $\mathbf{x}_i$, again for $i = 1,...,k^*$. The effect size measurement process is simply a random effects meta-regression, in which: 
+We begin with a set of $n^*$ effect size estimates, $T^*_1,...,T^*_{n^*}$ with known sampling variances $\sigma_h^2$, $h = 1,...,n^*$. Each effect size estimate also has a set of characteristics captured by a row-vector of $p$ covariates $\mathbf{x}_h$, again for $h = 1,...,n^*$. The effect size measurement process is simply a random effects meta-regression, in which: 
 $$
 T_h^* \sim N( \mathbf{x}_h \boldsymbol\beta, \ \tau^2 + \sigma_h^2),
 $$
@@ -19,7 +19,7 @@ where $\boldsymbol\beta$ is a $p \times 1$ vector of regression coefficients and
 
 The second component is a model for the process by which these effect size estimates are reported or published. 
 We assume that this process is driven by the direction and statistical significance of the estimates, as summarized in the one-sided p-values corresponding to each estimate. 
-The one-sided p-value corresponding to study $h$ is $p_h = 1 - \Phi\left(T_h^* / \sigma_h\right)$, where $\Phi$ is the standard normal cumulative distribution function. The selection model takes the form of a step function in the one-side p-values, with changes in level at a defined set of $q \geq 1$ steps, $a_1,...,a_q$, where $0 < a_j < 1$ for $j = 1,...,q$. Let $\boldsymbol\omega = (\omega_1,...,\omega_q)$ be a $q \times 1$ vector of weights, where $\omega_j \geq 0$ for $j = 1,...,q$. Define
+The one-sided p-value corresponding to study $h$ is $p_h = 1 - \Phi\left(T_h^* / \sigma_h\right)$, where $\Phi$ is the standard normal cumulative distribution function. The selection model takes the form of a step function in the one-side p-values, with changes in level at a defined set of $q \geq 1$ steps, $a_1,...,a_q$, where $0 < a_s < 1$ for $s = 1,...,q$. Let $\boldsymbol\omega = (\omega_1,...,\omega_q)$ be a $q \times 1$ vector of weights, where $\omega_s \geq 0$ for $s = 1,...,q$. Define
 
 $$
 w\left(p_h\right) = \begin{cases} 
@@ -33,13 +33,13 @@ It is assumed that the effect size $T^*_h$ is observed with probability $w(p_h)$
 $$
 w\left(T, \ \sigma^2\right) = \begin{cases} 
 1 & \text{if} \quad -\sigma \Phi^{-1}(a_1) < T \\ 
-\omega_j & \text{if} \quad -\sigma \Phi^{-1}(a_{j + 1}) < T \leq -\sigma \Phi^{-1}(a_j) \\
+\omega_s & \text{if} \quad -\sigma \Phi^{-1}(a_{s + 1}) < T \leq -\sigma \Phi^{-1}(a_s) \\
 \omega_q & \text{if} \quad T \leq -\sigma \Phi^{-1}(a_q)
 \end{cases}
 $$
 For notational convenience, let $\omega_0 = 1$, $a_0 = 0$, and $a_{q + 1} = 1$. 
 
-Let $T_1,...,T_k$ correspond to the observed effect sizes, with corresponding sampling variances $\sigma_1^2,...,\sigma_k^2$. Let $\phi()$ denote the standard normal density. The distribution of the observed effect sizes is a distortion of the normal distribution, given by 
+Let $T_1,...,T_n$ correspond to the observed effect sizes, with corresponding sampling variances $\sigma_1^2,...,\sigma_n^2$. Let $\phi()$ denote the standard normal density. The distribution of the observed effect sizes is a distortion of the normal distribution, given by 
 
 $$
 f\left(\left. T_i \right| \boldsymbol\beta, \tau^2, \boldsymbol\omega\right) = \frac{w(T_i, \sigma_i^2) \phi\left(\frac{T_i - \mathbf{x}_i \boldsymbol\beta}{\sqrt{\tau^2 + \sigma_i^2}}\right)}{\sqrt{\tau^2 + \sigma_i^2} A(\mathbf{x}_i \boldsymbol\beta, \tau^2, \boldsymbol\omega)}.
@@ -60,25 +60,25 @@ $$
 In the simple case where the effect size estimates are mutually independent, we then have joint likelihood
 
 $$
-\mathcal{L}\left(\boldsymbol\beta, \tau^2, \boldsymbol\omega\right) = \prod_{i=1}^k \frac{w(T_i, \sigma_i^2) \phi\left(\frac{T_i - \mathbf{x}_i \boldsymbol\beta}{\sqrt{\tau^2 + \sigma_i^2}}\right)}{\sqrt{\tau^2 + \sigma_i^2} A(\mathbf{x}_i \boldsymbol\beta, \tau^2, \boldsymbol\omega)},
+\mathcal{L}\left(\boldsymbol\beta, \tau^2, \boldsymbol\omega\right) = \prod_{i=1}^n \frac{w(T_i, \sigma_i^2) \phi\left(\frac{T_i - \mathbf{x}_i \boldsymbol\beta}{\sqrt{\tau^2 + \sigma_i^2}}\right)}{\sqrt{\tau^2 + \sigma_i^2} A(\mathbf{x}_i \boldsymbol\beta, \tau^2, \boldsymbol\omega)},
 $$
 
 and log-likelihood proportional to 
 
 $$
-l\left(\boldsymbol\beta, \tau^2, \boldsymbol\omega\right) = \sum_{i=1}^k \ln w(T_i, \sigma_i^2) - \frac{1}{2} \sum_{i=1}^k \frac{\left(T_i - \mathbf{x}_i \boldsymbol\beta\right)^2}{\tau^2 + \sigma_i^2} - \frac{1}{2}\sum_{i=1}^k \ln\left(\tau^2 + \sigma_i^2\right) - \sum_{i=1}^k \ln A(\mathbf{x}_i \boldsymbol\beta, \tau^2, \boldsymbol\omega).
+l\left(\boldsymbol\beta, \tau^2, \boldsymbol\omega\right) = \sum_{i=1}^n \ln w(T_i, \sigma_i^2) - \frac{1}{2} \sum_{i=1}^n \frac{\left(T_i - \mathbf{x}_i \boldsymbol\beta\right)^2}{\tau^2 + \sigma_i^2} - \frac{1}{2}\sum_{i=1}^n \ln\left(\tau^2 + \sigma_i^2\right) - \sum_{i=1}^n \ln A(\mathbf{x}_i \boldsymbol\beta, \tau^2, \boldsymbol\omega).
 $$
 
 # Score function
 
-Vevea and Hedges (1995) provide expressions for the score function, which is the derivative of the log likelihood with respect to the parameter vector. Let $c_j = \sum_{i=1}^k I(a_j < p_i < a_{j+1})$ denote the number of observed p-values falling within each level of the step function. 
+Vevea and Hedges (1995) provide expressions for the score function, which is the derivative of the log likelihood with respect to the parameter vector. Let $c_s = \sum_{i=1}^n I(a_s < p_i < a_{s+1})$ denote the number of observed p-values falling within each level of the step function for $s = 1,...,q$. 
 
-To calculate the scores, we will need the derivatives of $A_i = A(\mathbf{x}_i \boldsymbol\beta, \tau^2, \boldsymbol\omega)$ with respect to $\boldsymbol\beta$ and $\tau^2$. Letting $b_{im} = -\sigma_i \Phi^{-1}(a_j) - \mathbf{x}_i \boldsymbol\beta$ and $\eta_i^2 = \tau^2 + \sigma_i^2$, we have
+To calculate the scores, we will need the derivatives of $A_i = A(\mathbf{x}_i \boldsymbol\beta, \tau^2, \boldsymbol\omega)$ with respect to $\boldsymbol\beta$ and $\tau^2$. Let $e_i = T_i - \mathbf{x}_i \boldsymbol\beta$, $\eta_i^2 = \tau^2 + \sigma_i^2$, and $c_{is} = \left(-\sigma_i \Phi^{-1}(a_s) - \mathbf{x}_i \boldsymbol\beta\right) / \eta_i$. We then have
 
 $$
 \begin{aligned}
-\frac{\partial A_i}{\partial \boldsymbol\beta} &= \frac{\mathbf{x}_i'}{\eta_i}\sum_{j=0}^q \omega_j \left[\phi\left(\frac{b_{i(j+1)}}{\eta_i}\right) - \phi\left(\frac{b_{ij}}{\eta_i}\right) \right] \\
-\frac{\partial A_i}{\partial \tau^2} &= \sum_{j=0}^q \omega_j \left[ \frac{b_{i(j+1)}}{\eta_i^3} \phi\left(\frac{b_{i(j + 1)}}{\eta_i}\right) - \frac{b_{ij}}{\eta_i^3}\phi\left(\frac{b_{ij}}{\eta_i}\right) \right]
+\frac{\partial A_i}{\partial \boldsymbol\beta} &= \frac{\mathbf{x}_i'}{\eta_i}\sum_{s=0}^q \omega_j \left[\phi\left(c_{i(s+1)}\right) - \phi\left(c_{is}\right) \right] \\
+\frac{\partial A_i}{\partial \tau^2} &= \frac{1}{2 \eta_i^2} \sum_{s=0}^q \omega_j \left[ c_{i(s+1)} \phi\left(c_{i(s+1)}\right) - c_{is}\phi\left(c_{is}\right) \right]
 \end{aligned}
 $$
 
@@ -86,9 +86,33 @@ The scores are then as follows:
 
 $$
 \begin{aligned}
-\frac{\partial l}{\partial \boldsymbol\beta} &= \sum_{i=1}^k \frac{\mathbf{x}_i' \left(T_i - \mathbf{x}_i \boldsymbol\beta\right)}{\eta_i^2} - \sum_{i=1}^k \frac{\partial A_i / \partial \boldsymbol\beta}{A_i} \\
-\frac{\partial l}{\partial \tau^2} &= \frac{1}{2}\sum_{i=1}^k \frac{\left(T_i - \mathbf{x}_i \boldsymbol\beta\right)^2}{\eta_i^4} - \frac{1}{2}\sum_{i=1}^k \frac{1}{\eta_i^2} - \sum_{i=1}^k \frac{\partial A_i/ \partial \tau^2}{A_i} \\
+\frac{\partial l}{\partial \boldsymbol\beta} &= \sum_{i=1}^k \frac{\mathbf{x}_i' e_i}{\eta_i^2} - \sum_{i=1}^k \frac{\partial A_i / \partial \boldsymbol\beta}{A_i} \\
+\frac{\partial l}{\partial \tau^2} &= \frac{1}{2}\sum_{i=1}^k \frac{e_i^2}{\eta_i^4} - \frac{1}{2}\sum_{i=1}^k \frac{1}{\eta_i^2} - \sum_{i=1}^k \frac{\partial A_i/ \partial \tau^2}{A_i} \\
 \frac{\partial l}{\partial \omega_j} &= \frac{c_j}{\omega_j} - \sum_{i=1}^k \frac{B_{ij}}{A_i}
+\end{aligned}
+$$
+# Hessian 
+
+The score test makes use of the Hessian matrix, which is the matrix of partial second derivatives of the log likelihood with respect to the parameters. To calculate the Hessian, we will need the partial second derivatives of $A_i$, which are given by:
+
+$$
+\begin{aligned}
+\frac{\partial^2 A_i}{\partial \boldsymbol\beta \partial \boldsymbol\beta'} &= \frac{\mathbf{x}_i' \mathbf{x}_i}{\eta_i^2} \sum_{s=0}^q \omega_s \left[c_{i(s+1)} \phi\left(c_{i(s+1)}\right) - c_{is} \phi\left(c_{is}\right)\right] \\
+\frac{\partial^2 A_i}{\partial (\tau^2)^2} &= \frac{1}{4 \eta_i^4} \sum_{s=0}^q \omega_s \left[c_{i(s+1)}\left(c_{i(s+1)}^2 - 3\right) \phi\left(c_{i(s+1)}\right) - c_{is} \left(c_{is}^2 - 3\right) \phi\left(c_{is}\right)\right] \\
+\frac{\partial^2 A_i}{\partial \boldsymbol\beta \partial \tau^2} &= \frac{\mathbf{x}_i'}{2\eta_i^3} \sum_{s=0}^q \omega_s \left[\left(c_{i(s+1)}^2 - 1\right) \phi\left(c_{i(s+1)}\right) - \left(c_{is}^2 - 1\right) \phi\left(c_{is}\right)\right] \\
+\end{aligned}
+$$
+
+The entries of the Hessian matrix are then as follows:
+
+$$
+\begin{aligned}
+\frac{\partial^2 l}{\partial \boldsymbol\beta \partial \boldsymbol\beta'} &= \sum_{i=1}^n \frac{1}{A_i^2}\left(\frac{\partial A_i}{\partial \boldsymbol\beta}\right)\left(\frac{\partial A_i}{\partial \boldsymbol\beta}\right)' - \sum_{i=1}^n \frac{1}{A_i} \frac{\partial^2 A_i}{\partial \boldsymbol\beta \partial \boldsymbol\beta'} - \sum_{1}^n \frac{\mathbf{x}_i' \mathbf{x}_i}{\eta_i^2} \\
+\frac{\partial^2 A_i}{\partial (\tau^2)^2} &= \frac{1}{2} \sum_{i=1}^n \frac{1}{\eta_i^4} - \sum_{i=1}^n \frac{e_i^2}{\eta_i^6} - \sum_{i=1}^n \frac{1}{A_i} \frac{\partial^2 A_i}{\partial (\tau^2)^2} + \sum_{i=1}^n \left(\frac{\partial A_i / \partial \tau^2}{A_i}\right)^2 \\
+\frac{\partial^2 A_i}{\partial \boldsymbol\beta \partial \tau^2} &= \sum_{i=1}^n \frac{1}{A_i^2} \frac{\partial A_i}{\partial \boldsymbol\beta} \frac{\partial A_i}{\partial \tau^2} - \sum_{i=1}^n \frac{1}{A_i} \frac{\partial^2 A_i}{\partial \boldsymbol\beta \partial \tau^2} - \sum_{i=1}^n \frac{\mathbf{x}_i e_i}{\eta_i^4} \\
+\frac{\partial^2 l}{\partial \omega_s \partial \omega_t} &= \sum_{i=1}^n \frac{B_{is} B_{it}}{A_i^2} - I(s = t) \frac{c_s}{\omega_s^2} \\
+\frac{\partial^2 A_i}{\partial \boldsymbol\beta \partial \omega_s} &= \sum_{i=1}^n  \frac{1}{A_i} \left[ \frac{B_{is}}{A_i} \frac{\partial A_i}{\partial \boldsymbol\beta} - \frac{\partial B_{is}}{\partial \boldsymbol\beta}\right] \\
+\frac{\partial^2 A_i}{\partial \tau^2 \partial \omega_s} &= \sum_{i=1}^n \frac{1}{A_i} \left[ \frac{B_{is}}{A_i} \frac{\partial A_i}{\partial \tau^2} - \frac{\partial B_{is}}{\partial \tau^2}\right]
 \end{aligned}
 $$
 
