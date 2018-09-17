@@ -91,6 +91,7 @@ $$
 \frac{\partial l}{\partial \omega_j} &= \frac{c_j}{\omega_j} - \sum_{i=1}^k \frac{B_{ij}}{A_i}
 \end{aligned}
 $$
+
 # Hessian 
 
 The score test makes use of the Hessian matrix, which is the matrix of partial second derivatives of the log likelihood with respect to the parameters. To calculate the Hessian, we will need the partial second derivatives of $A_i$, which are given by:
