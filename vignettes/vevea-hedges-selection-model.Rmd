@@ -93,9 +93,9 @@ The scores are then as follows:
 
 $$
 \begin{aligned}
-\frac{\partial l}{\partial \boldsymbol\beta} &= \sum_{i=1}^k \mathbf{x}_i' \left(\frac{e_i}{\eta_i^2} - \frac{\partial A_i / \partial \mu_i}{A_i}\right) \\
-\frac{\partial l}{\partial \tau^2} &= \frac{1}{2}\sum_{i=1}^k \frac{e_i^2}{\eta_i^4} - \frac{1}{2}\sum_{i=1}^k \frac{1}{\eta_i^2} - \sum_{i=1}^k \frac{\partial A_i/ \partial \tau^2}{A_i} \\
-\frac{\partial l}{\partial \omega_s} &= \frac{n_s}{\omega_s} - \sum_{i=1}^k \frac{B_{is}}{A_i}
+\frac{\partial l}{\partial \boldsymbol\beta} &= \sum_{i=1}^n \mathbf{x}_i' \left(\frac{e_i}{\eta_i^2} - \frac{\partial A_i / \partial \mu_i}{A_i}\right) \\
+\frac{\partial l}{\partial \tau^2} &= \frac{1}{2}\sum_{i=1}^n \frac{e_i^2}{\eta_i^4} - \frac{1}{2}\sum_{i=1}^n \frac{1}{\eta_i^2} - \sum_{i=1}^n \frac{\partial A_i/ \partial \tau^2}{A_i} \\
+\frac{\partial l}{\partial \omega_s} &= \frac{n_s}{\omega_s} - \sum_{i=1}^n \frac{B_{is}}{A_i}
 \end{aligned}
 $$
 
@@ -103,9 +103,9 @@ If $\boldsymbol\omega = \mathbf{1}$, then $A_i = 1$ for $i = 1,...,n$ and the sc
 
 $$
 \begin{aligned}
-\frac{\partial l}{\partial \boldsymbol\beta} &= \sum_{i=1}^k \frac{\mathbf{x}_i' e_i}{\eta_i^2} \\
-\frac{\partial l}{\partial \tau^2} &= \frac{1}{2}\sum_{i=1}^k \frac{e_i^2}{\eta_i^4} - \frac{1}{2}\sum_{i=1}^k \frac{1}{\eta_i^2} \\
-\frac{\partial l}{\partial \omega_s} &= n_s - \sum_{i=1}^k B_{is}
+\frac{\partial l}{\partial \boldsymbol\beta} &= \sum_{i=1}^n \frac{\mathbf{x}_i' e_i}{\eta_i^2} \\
+\frac{\partial l}{\partial \tau^2} &= \frac{1}{2}\sum_{i=1}^n \frac{e_i^2}{\eta_i^4} - \frac{1}{2}\sum_{i=1}^n \frac{1}{\eta_i^2} \\
+\frac{\partial l}{\partial \omega_s} &= n_s - \sum_{i=1}^n B_{is}
 \end{aligned}
 $$
 
