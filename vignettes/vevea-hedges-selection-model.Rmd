@@ -1,12 +1,19 @@
 ---
 title: "Vevea & Hedges selection model"
 author: "James E. Pustejovsky"
-date: "September 12, 2018"
-output: html_document
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+```{r setup, include = FALSE}
+knitr::opts_chunk$set(
+  collapse = TRUE,
+  comment = "#>"
+)
 ```
 
 Vevea & Hedges (1995) developed a selection model for random effects meta-analysis (and meta-regression), which models a potential mechanism for publication bias based on a step function for the probability that significant results are published. The model has two components: a model for the effect size measurement process and a model for the reporting/publication process. Let me start by laying out the model (with some slight tweaks to Vevea and Hedges' notation).
@@ -48,13 +55,13 @@ $$
 $A(\mathbf{x}_i \boldsymbol\beta, \tau^2, \boldsymbol\omega)$ is a normalizing constant given by 
 
 $$
-A(\mathbf{x}_i \boldsymbol\beta, \tau^2, \boldsymbol\omega) = \sum_{j = 0}^q \omega_j B_{ij} \left(\mathbf{x}_i \boldsymbol\beta, \tau^2\right),
+A(\mu_i, \tau^2, \boldsymbol\omega) = \sum_{s = 0}^q \omega_s B_{is} \left(\mu_i, \tau^2\right),
 $$
 
-where 
+where $\mu_i = \mathbf{x}_i \boldsymbol\beta$ and 
 
 $$
-B_{ij}\left(\mathbf{x}_i \boldsymbol\beta, \tau^2\right) = \Phi\left(\frac{-\sigma_i\Phi^{-1}(a_j) - \mathbf{x}_i \boldsymbol\beta}{\sqrt{\tau^2 + \sigma_i^2}}\right) - \Phi\left(\frac{-\sigma_i\Phi^{-1}(a_{j+1}) - \mathbf{x}_i \boldsymbol\beta}{\sqrt{\tau^2 + \sigma_i^2}}\right).
+B_{is}\left(\mu_i, \tau^2\right) = \Phi\left(\frac{-\sigma_i\Phi^{-1}(a_s) - \mu_i}{\sqrt{\tau^2 + \sigma_i^2}}\right) - \Phi\left(\frac{-\sigma_i\Phi^{-1}(a_{s+1}) - \mu_i}{\sqrt{\tau^2 + \sigma_i^2}}\right).
 $$
 
 In the simple case where the effect size estimates are mutually independent, we then have joint likelihood
@@ -71,14 +78,14 @@ $$
 
 # Score function
 
-Vevea and Hedges (1995) provide expressions for the score function, which is the derivative of the log likelihood with respect to the parameter vector. Let $c_s = \sum_{i=1}^n I(a_s < p_i < a_{s+1})$ denote the number of observed p-values falling within each level of the step function for $s = 1,...,q$. 
+Vevea and Hedges (1995) provide expressions for the score function, which is the derivative of the log likelihood with respect to the parameter vector. Let $n_s = \sum_{i=1}^n I(a_s < p_i < a_{s+1})$ denote the number of observed p-values falling within each level of the step function for $s = 1,...,q$. 
 
-To calculate the scores, we will need the derivatives of $A_i = A(\mathbf{x}_i \boldsymbol\beta, \tau^2, \boldsymbol\omega)$ with respect to $\boldsymbol\beta$ and $\tau^2$. Let $e_i = T_i - \mathbf{x}_i \boldsymbol\beta$, $\eta_i^2 = \tau^2 + \sigma_i^2$, and $c_{is} = \left(-\sigma_i \Phi^{-1}(a_s) - \mathbf{x}_i \boldsymbol\beta\right) / \eta_i$. We then have
+To calculate the scores, we will need the derivatives of $A_i = A(\mu_i, \tau^2, \boldsymbol\omega)$ with respect to $\mu_i$ and $\tau^2$. Let $e_i = T_i - \mathbf{x}_i \boldsymbol\beta$, $\eta_i^2 = \tau^2 + \sigma_i^2$, and $c_{is} = \left(-\sigma_i \Phi^{-1}(a_s) - \mathbf{x}_i \boldsymbol\beta\right) / \eta_i$. We then have
 
 $$
 \begin{aligned}
-\frac{\partial A_i}{\partial \boldsymbol\beta} &= \frac{\mathbf{x}_i'}{\eta_i}\sum_{s=0}^q \omega_j \left[\phi\left(c_{i(s+1)}\right) - \phi\left(c_{is}\right) \right] \\
-\frac{\partial A_i}{\partial \tau^2} &= \frac{1}{2 \eta_i^2} \sum_{s=0}^q \omega_j \left[ c_{i(s+1)} \phi\left(c_{i(s+1)}\right) - c_{is}\phi\left(c_{is}\right) \right]
+\frac{\partial A_i}{\partial \mu_i} &= \frac{1}{\eta_i}\sum_{s=0}^q \omega_s \left[\phi\left(c_{i(s+1)}\right) - \phi\left(c_{is}\right) \right] \\
+\frac{\partial A_i}{\partial \tau^2} &= \frac{1}{2 \eta_i^2} \sum_{s=0}^q \omega_s \left[ c_{i(s+1)} \phi\left(c_{i(s+1)}\right) - c_{is}\phi\left(c_{is}\right) \right]
 \end{aligned}
 $$
 
@@ -86,9 +93,19 @@ The scores are then as follows:
 
 $$
 \begin{aligned}
-\frac{\partial l}{\partial \boldsymbol\beta} &= \sum_{i=1}^k \frac{\mathbf{x}_i' e_i}{\eta_i^2} - \sum_{i=1}^k \frac{\partial A_i / \partial \boldsymbol\beta}{A_i} \\
+\frac{\partial l}{\partial \boldsymbol\beta} &= \sum_{i=1}^k \mathbf{x}_i' \left(\frac{e_i}{\eta_i^2} - \frac{\partial A_i / \partial \mu_i}{A_i}\right) \\
 \frac{\partial l}{\partial \tau^2} &= \frac{1}{2}\sum_{i=1}^k \frac{e_i^2}{\eta_i^4} - \frac{1}{2}\sum_{i=1}^k \frac{1}{\eta_i^2} - \sum_{i=1}^k \frac{\partial A_i/ \partial \tau^2}{A_i} \\
-\frac{\partial l}{\partial \omega_j} &= \frac{c_j}{\omega_j} - \sum_{i=1}^k \frac{B_{ij}}{A_i}
+\frac{\partial l}{\partial \omega_s} &= \frac{n_s}{\omega_s} - \sum_{i=1}^k \frac{B_{is}}{A_i}
+\end{aligned}
+$$
+
+If $\boldsymbol\omega = \mathbf{1}$, then $A_i = 1$ for $i = 1,...,n$ and the scores simplify to
+
+$$
+\begin{aligned}
+\frac{\partial l}{\partial \boldsymbol\beta} &= \sum_{i=1}^k \frac{\mathbf{x}_i' e_i}{\eta_i^2} \\
+\frac{\partial l}{\partial \tau^2} &= \frac{1}{2}\sum_{i=1}^k \frac{e_i^2}{\eta_i^4} - \frac{1}{2}\sum_{i=1}^k \frac{1}{\eta_i^2} \\
+\frac{\partial l}{\partial \omega_s} &= n_s - \sum_{i=1}^k B_{is}
 \end{aligned}
 $$
 
@@ -98,9 +115,9 @@ The score test makes use of the Hessian matrix, which is the matrix of partial s
 
 $$
 \begin{aligned}
-\frac{\partial^2 A_i}{\partial \boldsymbol\beta \partial \boldsymbol\beta'} &= \frac{\mathbf{x}_i' \mathbf{x}_i}{\eta_i^2} \sum_{s=0}^q \omega_s \left[c_{i(s+1)} \phi\left(c_{i(s+1)}\right) - c_{is} \phi\left(c_{is}\right)\right] \\
+\frac{\partial^2 A_i}{\partial \mu_i \partial \mu_i} &= \frac{1}{\eta_i^2} \sum_{s=0}^q \omega_s \left[c_{i(s+1)} \phi\left(c_{i(s+1)}\right) - c_{is} \phi\left(c_{is}\right)\right] \\
 \frac{\partial^2 A_i}{\partial (\tau^2)^2} &= \frac{1}{4 \eta_i^4} \sum_{s=0}^q \omega_s \left[c_{i(s+1)}\left(c_{i(s+1)}^2 - 3\right) \phi\left(c_{i(s+1)}\right) - c_{is} \left(c_{is}^2 - 3\right) \phi\left(c_{is}\right)\right] \\
-\frac{\partial^2 A_i}{\partial \boldsymbol\beta \partial \tau^2} &= \frac{\mathbf{x}_i'}{2\eta_i^3} \sum_{s=0}^q \omega_s \left[\left(c_{i(s+1)}^2 - 1\right) \phi\left(c_{i(s+1)}\right) - \left(c_{is}^2 - 1\right) \phi\left(c_{is}\right)\right] \\
+\frac{\partial^2 A_i}{\partial \mu_i \partial \tau^2} &= \frac{1}{2\eta_i^3} \sum_{s=0}^q \omega_s \left[\left(c_{i(s+1)}^2 - 1\right) \phi\left(c_{i(s+1)}\right) - \left(c_{is}^2 - 1\right) \phi\left(c_{is}\right)\right] \\
 \end{aligned}
 $$
 
@@ -108,13 +125,23 @@ The entries of the Hessian matrix are then as follows:
 
 $$
 \begin{aligned}
-\frac{\partial^2 l}{\partial \boldsymbol\beta \partial \boldsymbol\beta'} &= \sum_{i=1}^n \frac{1}{A_i^2}\left(\frac{\partial A_i}{\partial \boldsymbol\beta}\right)\left(\frac{\partial A_i}{\partial \boldsymbol\beta}\right)' - \sum_{i=1}^n \frac{1}{A_i} \frac{\partial^2 A_i}{\partial \boldsymbol\beta \partial \boldsymbol\beta'} - \sum_{1}^n \frac{\mathbf{x}_i' \mathbf{x}_i}{\eta_i^2} \\
-\frac{\partial^2 A_i}{\partial (\tau^2)^2} &= \frac{1}{2} \sum_{i=1}^n \frac{1}{\eta_i^4} - \sum_{i=1}^n \frac{e_i^2}{\eta_i^6} - \sum_{i=1}^n \frac{1}{A_i} \frac{\partial^2 A_i}{\partial (\tau^2)^2} + \sum_{i=1}^n \left(\frac{\partial A_i / \partial \tau^2}{A_i}\right)^2 \\
-\frac{\partial^2 A_i}{\partial \boldsymbol\beta \partial \tau^2} &= \sum_{i=1}^n \frac{1}{A_i^2} \frac{\partial A_i}{\partial \boldsymbol\beta} \frac{\partial A_i}{\partial \tau^2} - \sum_{i=1}^n \frac{1}{A_i} \frac{\partial^2 A_i}{\partial \boldsymbol\beta \partial \tau^2} - \sum_{i=1}^n \frac{\mathbf{x}_i e_i}{\eta_i^4} \\
-\frac{\partial^2 l}{\partial \omega_s \partial \omega_t} &= \sum_{i=1}^n \frac{B_{is} B_{it}}{A_i^2} - I(s = t) \frac{c_s}{\omega_s^2} \\
-\frac{\partial^2 A_i}{\partial \boldsymbol\beta \partial \omega_s} &= \sum_{i=1}^n  \frac{1}{A_i} \left[ \frac{B_{is}}{A_i} \frac{\partial A_i}{\partial \boldsymbol\beta} - \frac{\partial B_{is}}{\partial \boldsymbol\beta}\right] \\
-\frac{\partial^2 A_i}{\partial \tau^2 \partial \omega_s} &= \sum_{i=1}^n \frac{1}{A_i} \left[ \frac{B_{is}}{A_i} \frac{\partial A_i}{\partial \tau^2} - \frac{\partial B_{is}}{\partial \tau^2}\right]
+\frac{\partial^2 l}{\partial \boldsymbol\beta \partial \boldsymbol\beta'} &= \sum_{i=1}^n \mathbf{x}_i \mathbf{x}_i' \left[\left(\frac{\partial A_i / \partial \mu_i}{A_i}\right)^2 - \frac{1}{A_i} \frac{\partial^2 A_i}{\partial \mu_i \partial \mu_i} - \frac{1}{\eta_i^2}\right] \\
+\frac{\partial^2 l}{\partial (\tau^2)^2} &= \frac{1}{2} \sum_{i=1}^n \frac{1}{\eta_i^4} - \sum_{i=1}^n \frac{e_i^2}{\eta_i^6} - \sum_{i=1}^n \frac{1}{A_i} \frac{\partial^2 A_i}{\partial (\tau^2)^2} + \sum_{i=1}^n \left(\frac{\partial A_i / \partial \tau^2}{A_i}\right)^2 \\
+\frac{\partial^2 l}{\partial \boldsymbol\beta \partial \tau^2} &= \sum_{i=1}^n \mathbf{x}_i' \left[\frac{1}{A_i^2} \frac{\partial A_i}{\partial \mu_i} \frac{\partial A_i}{\partial \tau^2} - \frac{1}{A_i} \frac{\partial^2 A_i}{\partial \mu_i \partial \tau^2} - \frac{e_i}{\eta_i^4}\right] \\
+\frac{\partial^2 l}{\partial \omega_s \partial \omega_t} &= \sum_{i=1}^n \frac{B_{is} B_{it}}{A_i^2} - I(s = t) \frac{n_s}{\omega_s^2} \\
+\frac{\partial^2 l}{\partial \boldsymbol\beta \partial \omega_s} &= \sum_{i=1}^n \frac{\mathbf{x}_i'}{A_i} \left[ \frac{B_{is}}{A_i} \frac{\partial A_i}{\partial \mu_i} - \frac{\partial B_{is}}{\partial \mu_i}\right] \\
+\frac{\partial^2 l}{\partial \tau^2 \partial \omega_s} &= \sum_{i=1}^n \frac{1}{A_i} \left[ \frac{B_{is}}{A_i} \frac{\partial A_i}{\partial \tau^2} - \frac{\partial B_{is}}{\partial \tau^2}\right]
 \end{aligned}
 $$
+If $\boldsymbol\omega = \mathbf{1}$, then the Hessian simplifies to
 
-
+$$
+\begin{aligned}
+\frac{\partial^2 l}{\partial \boldsymbol\beta \partial \boldsymbol\beta'} &= - \sum_{i=1}^n  \frac{\mathbf{x}_i \mathbf{x}_i'}{\eta_i^2} \\
+\frac{\partial^2 l}{\partial (\tau^2)^2} &= \frac{1}{2} \sum_{i=1}^n \frac{1}{\eta_i^4} - \sum_{i=1}^n \frac{e_i^2}{\eta_i^6} \\
+\frac{\partial^2 l}{\partial \boldsymbol\beta \partial \tau^2} &= - \sum_{i=1}^n \frac{\mathbf{x}_i'e_i}{\eta_i^4} \\
+\frac{\partial^2 l}{\partial \omega_s \partial \omega_t} &= \sum_{i=1}^n B_{is} B_{it} - I(s = t) n_s \\
+\frac{\partial^2 l}{\partial \boldsymbol\beta \partial \omega_s} &= - \sum_{i=1}^n \mathbf{x}_i' \frac{\partial B_{is}}{\partial \mu_i} \\
+\frac{\partial^2 A_i}{\partial \tau^2 \partial \omega_s} &= - \sum_{i=1}^n \frac{\partial B_{is}}{\partial \tau^2}
+\end{aligned}
+$$
