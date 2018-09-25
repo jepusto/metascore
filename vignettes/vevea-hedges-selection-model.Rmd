@@ -142,6 +142,37 @@ $$
 \frac{\partial^2 l}{\partial \boldsymbol\beta \partial \tau^2} &= - \sum_{i=1}^n \frac{\mathbf{x}_i'e_i}{\eta_i^4} \\
 \frac{\partial^2 l}{\partial \omega_s \partial \omega_t} &= \sum_{i=1}^n B_{is} B_{it} - I(s = t) n_s \\
 \frac{\partial^2 l}{\partial \boldsymbol\beta \partial \omega_s} &= - \sum_{i=1}^n \mathbf{x}_i' \frac{\partial B_{is}}{\partial \mu_i} \\
-\frac{\partial^2 A_i}{\partial \tau^2 \partial \omega_s} &= - \sum_{i=1}^n \frac{\partial B_{is}}{\partial \tau^2}
+\frac{\partial^2 l}{\partial \tau^2 \partial \omega_s} &= - \sum_{i=1}^n \frac{\partial B_{is}}{\partial \tau^2}
 \end{aligned}
 $$
+
+# Fisher Information 
+
+The Fisher Information matrix is given by the expectation if the negative Hessian matrix: $\mathcal{I}_f = \mathbb{E}\left(-\mathcal{H}\right)$. Under the null hypothesis, the entries of $\mathcal{I}_f$ are as follows:
+
+$$
+\begin{aligned}
+\mathcal{I}_{\boldsymbol\beta\boldsymbol\beta} &= \sum_{i=1}^n  \frac{\mathbf{x}_i \mathbf{x}_i'}{\eta_i^2} \\
+\mathcal{I}_{\tau^2 \tau^2} &= \frac{1}{2} \sum_{i=1}^n \frac{1}{\eta_i^4} \\
+ \mathcal{I}_{\boldsymbol\beta \tau^2} &= \mathbf{0} \\
+\mathcal{I}_{\omega_s \omega_t} &= I(s = t) \sum_{i=1}^n B_{is} - \sum_{i=1}^n B_{is} B_{it} \\
+\mathcal{I}_{\boldsymbol\beta \omega_s} &= \sum_{i=1}^n \mathbf{x}_i' \frac{\partial B_{is}}{\partial \mu_i} \\
+\mathcal{I}_{\tau^2 \omega_s} &= \sum_{i=1}^n \frac{\partial B_{is}}{\partial \tau^2}
+\end{aligned}
+$$
+
+# Score tests
+
+Let $\boldsymbol{\hat\beta}_0$ and $\hat\tau^2_0$ denote the maximum likelihood estimates of $\boldsymbol\beta$ and $\tau^2$ under the null hypothesis restriction that $\boldsymbol\omega = \mathbf{1}$. Let $\mathbf{\tilde{S}} = \mathbf{S}(\boldsymbol{\hat\beta}_0, \hat\tau^2_0, \mathbf{1})$ denote the score vector and let $\mathbf{\tilde{\mathcal{I}}}_f = \mathbf{\mathcal{I}}_f(\boldsymbol{\hat\beta}_0, \hat\tau^2_0, \mathbf{1})$ denote the Fisher information matrix, both evaluated at the maximum likelihood estimates under the null hypothesis. 
+
+## Parametric score test
+
+The parametric score test (Rao, 1948; Boos, 1992) uses the statistic
+
+$$
+S = \mathbf{\tilde{S}}' \mathbf{\tilde{\mathcal{I}}}_f^{-1} \mathbf{\tilde{S}} = \mathbf{\tilde{S}}_{\boldsymbol\omega}'\left(\mathbf{\tilde{\mathcal{I}}}_{\boldsymbol\omega \boldsymbol\omega} - \mathbf{\tilde{\mathcal{I}}}_{(\boldsymbol\beta, \tau^2) \boldsymbol\omega} \mathbf{\tilde{\mathcal{I}}}_{(\boldsymbol\beta, \tau^2)(\boldsymbol\beta, \tau^2)}^{-1} \mathbf{\tilde{\mathcal{I}}}_{ \boldsymbol\omega (\boldsymbol\beta, \tau^2)}\right)^{-1} \mathbf{\tilde{S}}_{\boldsymbol\omega}.
+$$
+
+The null hypothesis is rejected at level $\alpha$ if $S$ exceeds the $\alpha$ critical value from a $\chi^2$ distribution with $q$ degrees of freedom.
+
+## Robust score test
