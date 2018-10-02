@@ -3,7 +3,7 @@
 # log likelihood 
 #---------------------------------------
 
-VHSM_loglik <- function(beta, tau_sq, omega, steps, y, s, X) {
+VHSM_loglik <- function(beta, tau_sq, omega, steps, y, s, X = matrix(rep(1, length(y)))) {
  
   omega_vec <- c(1, omega)
   mu_vec <- as.vector(X %*% beta)
