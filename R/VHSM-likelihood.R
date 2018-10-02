@@ -165,7 +165,7 @@ null_score <- function(beta, tau_sq, steps, y, s, X, prep = NULL) {
   
   dl_dbeta <- with(prep, colSums((er / eta^2) * X))
   dl_dtausq <- with(prep, sum(er^2 / eta^4) / 2 - sum(1 / eta^2) / 2)
-  dl_domega <- with(prep, n_s[-1] - colSums(B_mat[,-1]))
+  dl_domega <- with(prep, n_s[-1] - colSums(B_mat[,-1,drop=FALSE]))
   
   c(dl_dbeta, dl_dtausq, dl_domega)
 }
@@ -182,7 +182,7 @@ null_Info <- function(beta, tau_sq, steps, y, s, X, prep = NULL, info = "observe
   
   d2l_dbeta_dbeta <- with(prep, crossprod(X / eta))
   d2l_dbeta_domega <- crossprod(X, dB_dmu[,-1])
-  d2l_dtausq_domega <- colSums(dB_dtausq[,-1])
+  d2l_dtausq_domega <- colSums(dB_dtausq[,-1,drop=FALSE])
   
   if (info == "observed") {
     d2l_dbeta_dtausq <- with(prep, colSums((er / eta^4) * X))
@@ -199,7 +199,7 @@ null_Info <- function(beta, tau_sq, steps, y, s, X, prep = NULL, info = "observe
     cbind(t(d2l_dbeta_dtausq), d2l_dtausq_dtausq, t(d2l_dtausq_domega)),
     cbind(t(d2l_dbeta_domega), d2l_dtausq_domega, d2l_domega_domega)
   )
-  colnames(I_mat) <- NULL  
+  dimnames(I_mat) <- NULL  
   
   I_mat  
 }

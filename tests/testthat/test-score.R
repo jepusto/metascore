@@ -1,24 +1,36 @@
 context("VHSM score tests")
 
-rm(list=ls())
-N <- 200
-p <- 3
-X <- matrix(rnorm(N * (p - 1)), N, p - 1)
-beta <- rnorm(p, mean = 0.2, sd = 0.1)
-tau_sq <- 0.2^2
-omega <- c(0.5, 0.4)
-steps <- c(0.025, 0.5)
-s <- 1 / rchisq(N, df = 5)
-y <- as.vector(cbind(rep(1, N), X) %*% beta) + rnorm(N, sd = sqrt(tau_sq)) + rnorm(N, sd = s)
-dat <- data.frame(y = y, s = s, X)
+dat <- r_SMD(studies = 100, mean_effect = 0.1, sd_effect = 0.1,
+             n_sim = n_beta(10, 50, na = 3, nb = 3),
+             p_thresholds = .025, p_RR = 0.5)
 
-library(metafor)
-model <- rma(y ~ X1 + X2, sei = s, data = dat)
+dat$X1 <- rnorm(100)
+dat$X2 <- sample(LETTERS[1:4], size = 100, replace = TRUE)
 
-beta <- as.vector(model$beta)
-tau_sq <- model$tau2
+test_types <- 
+  list(
+    type = c("parametric","robust"), 
+    info = c("expected","observed"),
+    steps = list(one = .025, two = c(.025, .500))
+  ) %>%
+  purrr:cross()
 
-VHSM_score_test(model, steps = steps, type = "parametric", info = "expected")
-VHSM_score_test(model, steps = steps, type = "parametric", info = "observed")
-VHSM_score_test(model, steps = steps, type = "robust", info = "expected")
-VHSM_score_test(model, steps = steps, type = "robust", info = "observed")
+
+test_that("Score tests work for intercept only models.", {
+  
+  meta_fit <- rma(g, sei = sda, data = dat, method = "ML")
+  
+  score_tests <- map_dfr(test_types, .f = ~ VHSM_score_test(meta_fit, steps = .$steps, type = .$type, info = .$info))
+  
+  expect_true(is.data.frame(score_tests))
+})
+
+test_that("Score tests work for meta-regression models.", {
+  
+  meta_reg <- rma(g ~ X1 + X2, sei = sda, data = dat, method = "ML")
+  
+  score_tests <- map_dfr(test_types, .f = ~ VHSM_score_test(meta_reg, steps = .$steps, type = .$type, info = .$info))
+  
+  expect_true(is.data.frame(score_tests))
+})
+
