@@ -85,7 +85,7 @@ VHSM_score <- function(beta, tau_sq, omega, steps, y, s, X, prep = NULL) {
   with(prep, c(dl_dbeta, dl_dtausq, dl_domega))
 }
 
-VHSM_Hessian <- function(beta, tau_sq, omega, steps, y, s, X, prep = NULL) {
+VHSM_Info <- function(beta, tau_sq, omega, steps, y, s, X, prep = NULL) {
   
   if (is.null(prep)) prep <- VHSM_prep(beta, tau_sq, omega, steps, y, s, X)
   
@@ -96,22 +96,22 @@ VHSM_Hessian <- function(beta, tau_sq, omega, steps, y, s, X, prep = NULL) {
   d2A_dtausq_dtausq <- as.vector((cbind(d3_mat, 0) - cbind(0, d3_mat)) %*% prep$omega_vec) / (4 * prep$eta^4)
   d2A_dmu_dtausq <- as.vector((cbind(d4_mat, 0) - cbind(0, d4_mat)) %*% prep$omega_vec) / (2 * prep$eta^3)
 
-  d2l_dbeta_dbeta <- with(prep, crossprod(X, ((dA_dmu / Ai)^2 - d2A_dmu_dmu / Ai - 1 / eta^2) * X))
-  d2l_dbeta_dtausq <- with(prep, colSums((dA_dmu * dA_dtausq / Ai^2 - d2A_dmu_dtausq / Ai - er / eta^4) * X))
-  d2l_dbeta_domega <- with(prep, crossprod(X, ((dA_dmu / Ai) * B_mat[,-1] - dB_dmu[,-1]) / Ai))
-  d2l_dtausq_dtausq <- with(prep, sum(1 / eta^4) / 2 - sum(er^2 / eta^6) - sum(d2A_dtausq_dtausq / Ai) + sum((dA_dtausq / Ai)^2))
-  d2l_dtausq_domega <- with(prep, colSums((dA_dtausq / Ai^2) * B_mat[,-1] - dB_dtausq[,-1] / Ai))
-  d2l_domega_domega <- with(prep, crossprod(B_mat[,-1] / Ai) - diag(n_s[-1] / omega^2, nrow = length(n_s) - 1L))
+  d2l_dbeta_dbeta <- with(prep, crossprod(X, (1 / eta^2 + d2A_dmu_dmu / Ai - (dA_dmu / Ai)^2) * X))
+  d2l_dbeta_dtausq <- with(prep, colSums((d2A_dmu_dtausq / Ai + er / eta^4 - dA_dmu * dA_dtausq / Ai^2) * X))
+  d2l_dbeta_domega <- with(prep, crossprod(X, (dB_dmu[,-1] - (dA_dmu / Ai) * B_mat[,-1]) / Ai))
+  d2l_dtausq_dtausq <- with(prep, sum(er^2 / eta^6) + sum(d2A_dtausq_dtausq / Ai) - sum(1 / eta^4) / 2 - sum((dA_dtausq / Ai)^2))
+  d2l_dtausq_domega <- with(prep, colSums(dB_dtausq[,-1] / Ai - (dA_dtausq / Ai^2) * B_mat[,-1]))
+  d2l_domega_domega <- with(prep, diag(n_s[-1] / omega^2, nrow = length(n_s) - 1L) - crossprod(B_mat[,-1] / Ai))
   
-  H <- rbind(
+  I_mat <- rbind(
     cbind(d2l_dbeta_dbeta, d2l_dbeta_dtausq, d2l_dbeta_domega),
     cbind(t(d2l_dbeta_dtausq), d2l_dtausq_dtausq, t(d2l_dtausq_domega)),
     cbind(t(d2l_dbeta_domega), d2l_dtausq_domega, d2l_domega_domega)
   )
   
-  colnames(H) <- NULL
+  colnames(I_mat) <- NULL
   
-  H
+  I_mat
 }
 
 #---------------------------------------
@@ -141,8 +141,22 @@ null_prep <- function(beta, tau_sq, steps, y, s, X) {
     eta = eta,
     c_mat = c_mat,
     B_mat = B_mat,
+    cats = cats,
     n_s = n_s
   )
+}
+
+null_score_matrix <- function(beta, tau_sq, steps, y, s, X, prep = NULL) {
+  
+  if (is.null(prep)) prep <- null_prep(beta, tau_sq, steps, y, s, X)
+  
+  obs_matrix <- model.matrix(~ 0 + prep$cats)
+    
+  dl_dbeta <- with(prep, (er / eta^2) * X)
+  dl_dtausq <- with(prep, er^2 / eta^4 - 1 / eta^2) / 2
+  dl_domega <- with(prep, obs_matrix[,-1] - B_mat[,-1])
+  
+  cbind(dl_dbeta, dl_dtausq, dl_domega)
 }
 
 null_score <- function(beta, tau_sq, steps, y, s, X, prep = NULL) {
@@ -156,7 +170,7 @@ null_score <- function(beta, tau_sq, steps, y, s, X, prep = NULL) {
   c(dl_dbeta, dl_dtausq, dl_domega)
 }
 
-null_Hessian <- function(beta, tau_sq, steps, y, s, X, prep = NULL) {
+null_Info <- function(beta, tau_sq, steps, y, s, X, prep = NULL, info = "observed") {
   
   if (is.null(prep)) prep <- null_prep(beta, tau_sq, steps, y, s, X)
   
@@ -166,20 +180,26 @@ null_Hessian <- function(beta, tau_sq, steps, y, s, X, prep = NULL) {
   dB_dmu <- (cbind(d1_mat, 0) - cbind(0, d1_mat)) / prep$eta
   dB_dtausq <- (cbind(d2_mat, 0) - cbind(0, d2_mat)) / (2 * prep$eta^2)
   
-  d2l_dbeta_dbeta <- with(prep, - crossprod(X / eta))
-  d2l_dbeta_dtausq <- with(prep, - colSums((er / eta^4) * X))
-  d2l_dbeta_domega <- - crossprod(X, dB_dmu[,-1])
-  d2l_dtausq_dtausq <- with(prep, sum(1 / eta^4) / 2 - sum(er^2 / eta^6))
-  d2l_dtausq_domega <- - colSums(dB_dtausq[,-1])
-  d2l_domega_domega <- with(prep, crossprod(B_mat[,-1]) - diag(n_s[-1], nrow = length(n_s) - 1L))
+  d2l_dbeta_dbeta <- with(prep, crossprod(X / eta))
+  d2l_dbeta_domega <- crossprod(X, dB_dmu[,-1])
+  d2l_dtausq_domega <- colSums(dB_dtausq[,-1])
   
+  if (info == "observed") {
+    d2l_dbeta_dtausq <- with(prep, colSums((er / eta^4) * X))
+    d2l_dtausq_dtausq <- with(prep, sum(er^2 / eta^6) - sum(1 / eta^4) / 2)
+    d2l_domega_domega <- with(prep, diag(n_s[-1], nrow = length(n_s) - 1L) - crossprod(B_mat[,-1]))
+  } else {
+    d2l_dbeta_dtausq <- rep(0, NCOL(X))
+    d2l_dtausq_dtausq <- sum(1 / prep$eta^4) / 2
+    d2l_domega_domega <- with(prep, diag(colSums(B_mat[,-1,drop=FALSE]), nrow = length(n_s) - 1L) - crossprod(B_mat[,-1]))
+  }
   
-  H <- rbind(
+  I_mat <- rbind(
     cbind(d2l_dbeta_dbeta, d2l_dbeta_dtausq, d2l_dbeta_domega),
     cbind(t(d2l_dbeta_dtausq), d2l_dtausq_dtausq, t(d2l_dtausq_domega)),
     cbind(t(d2l_dbeta_domega), d2l_dtausq_domega, d2l_domega_domega)
   )
-  colnames(H) <- NULL  
+  colnames(I_mat) <- NULL  
   
-  H  
+  I_mat  
 }

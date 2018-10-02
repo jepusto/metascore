@@ -21,6 +21,7 @@ weightr_est <- with(dat,
               table = TRUE)
 ) 
 
+
 test_that("likelihood ratio test agrees with weightr.", {
   
   LRT_weightr <- 2 * (weightr_est[[1]]$value - weightr_est[[2]]$value)
@@ -61,20 +62,26 @@ test_that("Null score is consistent with score.", {
   
 })
 
-test_that("Null Hessian is consistent with score.", {
+test_that("Null expected information is consistent with expected information", {
   
-  H_VHSM <- VHSM_Hessian(beta = weightr_est[[1]]$par[-1], 
+  I_VHSM <- VHSM_Info(beta = weightr_est[[1]]$par[-1], 
                          tau_sq = weightr_est[[1]]$par[1],
                          omega = c(1,1),
                          steps = steps,
-                         y = y, s = s, X = X)
+                         y = y, s = s, X = X, type = "Observed")
   
-  H_null <- null_Hessian(beta = weightr_est[[1]]$par[-1], 
+  IO_null <- null_Info(beta = weightr_est[[1]]$par[-1], 
                          tau_sq = weightr_est[[1]]$par[1],
                          steps = steps,
-                         y = y, s = s, X = X)
+                         y = y, s = s, X = X, type = "Observed")
   
-  expect_equal(H_VHSM, H_null)
+  IE_null <- null_Info(beta = weightr_est[[1]]$par[-1], 
+                       tau_sq = weightr_est[[1]]$par[1],
+                       steps = steps,
+                       y = y, s = s, X = X, type = "Expected")
+  
+  expect_equal(I_VHSM, IO_null)
+  expect_type(all.equal(I_VHSM, IE_null), "character")
   
 })
 
