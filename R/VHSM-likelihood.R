@@ -98,7 +98,7 @@ VHSM_Info <- function(beta, tau_sq, omega, steps, y, s, X, prep = NULL) {
 
   d2l_dbeta_dbeta <- with(prep, crossprod(X, (1 / eta^2 + d2A_dmu_dmu / Ai - (dA_dmu / Ai)^2) * X))
   d2l_dbeta_dtausq <- with(prep, colSums((d2A_dmu_dtausq / Ai + er / eta^4 - dA_dmu * dA_dtausq / Ai^2) * X))
-  d2l_dbeta_domega <- with(prep, crossprod(X, (dB_dmu[,-1] - (dA_dmu / Ai) * B_mat[,-1]) / Ai))
+  d2l_dbeta_domega <- with(prep, crossprod(X, (dB_dmu[,-1, drop = FALSE] - (dA_dmu / Ai) * B_mat[,-1,drop=FALSE]) / Ai))
   d2l_dtausq_dtausq <- with(prep, sum(er^2 / eta^6) + sum(d2A_dtausq_dtausq / Ai) - sum(1 / eta^4) / 2 - sum((dA_dtausq / Ai)^2))
   d2l_dtausq_domega <- with(prep, colSums(dB_dtausq[,-1] / Ai - (dA_dtausq / Ai^2) * B_mat[,-1]))
   d2l_domega_domega <- with(prep, diag(n_s[-1] / omega^2, nrow = length(n_s) - 1L) - crossprod(B_mat[,-1] / Ai))
@@ -109,7 +109,7 @@ VHSM_Info <- function(beta, tau_sq, omega, steps, y, s, X, prep = NULL) {
     cbind(t(d2l_dbeta_domega), d2l_dtausq_domega, d2l_domega_domega)
   )
   
-  colnames(I_mat) <- NULL
+  dimnames(I_mat) <- NULL
   
   I_mat
 }

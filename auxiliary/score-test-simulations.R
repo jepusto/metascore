@@ -1,8 +1,9 @@
+rm(list=ls())
+
 library(dplyr)
 library(purrr)
 devtools::load_all()
 
-rm(list=ls())
 
 #------------------------------------------
 # sample size distributions
@@ -43,45 +44,24 @@ test_types <-
   list(type = c("parametric","robust"), info = c("expected")) %>%
   cross()
   
-runSim(reps = 1000, studies = 60, mean_effect = 0.0, sd_effect = 0.0,
-       n_sim = n_empirical(Carter_n), 
-       p_thresholds = .025, p_RR = 1, test_types = test_types)
-
-reps <- 1000
-studies <- 60
-mean_effect <- 0.0
-sd_effect <- 0.0
-n_sim <- n_empirical(Carter_n)
-p_thresholds <- .025
-p_RR <- 1
-
-meta_datasets <- 
-  rerun(reps, {
-    r_SMD(studies, mean_effect, sd_effect, n_sim, p_thresholds = p_thresholds, p_RR = p_RR) 
-  }) 
-
-test_results <- map_df(meta_datasets, estimate_effects, test_types = test_types)
-
-test_results %>%
-  group_by(type, info) %>% 
-  summarise(
-    pct_NA = mean(is.na(p_val)),
-    reject_025 = mean(p_val < .025, na.rm = TRUE),
-    reject_050 = mean(p_val < .050, na.rm = TRUE),
-    reject_100 = mean(p_val < .100, na.rm = TRUE)
-  )
-
+# runSim(reps = 1000, studies = 100, mean_effect = 0.2, sd_effect = 0.1,
+#        n_sim = n_empirical(Carter_n), n_factor = 3L, 
+#        p_thresholds = .025, p_RR = 1, test_types = test_types)
 
 #--------------------------------------------------------
 # Simulation conditions: no selection 
 #--------------------------------------------------------
+source("R/VHSM-likelihood.R")
+source("R/score-tests.R")
+source("R/simulation-functions.R")
+source_obj <- ls()
 
 set.seed(20181002)
 
 design_factors <- list(
-  studies = c(20, 50, 80),
-  n_factor = 1L,
-  mean_effect = seq(0, 1, 0.1), 
+  studies = c(20, 40, 80, 120),
+  n_factor = 2L,
+  mean_effect = seq(0, 1, 0.2), 
   sd_effect = c(0, 0.1, 0.2, 0.4),
   p_thresholds = .025, 
   p_RR = 1L
@@ -90,14 +70,13 @@ design_factors <- list(
 lengths(design_factors)
 prod(lengths(design_factors))
 
-params <- expand.grid(design_factors)
-params <- subset(params, p_RR == 1 | mean_effect %in% c(0, 0.4, 0.8))
-
-(n_cond <- nrow(params))
-params$reps <- 8000
-params$seed <- round(runif(1) * 2^30) + 1:n_cond
-params <- params[sample(1:n_cond),]
-head(params)
+params <-
+  cross_df(design_factors) %>%
+  mutate(
+    reps = 8000,
+    seed = round(runif(1) * 2^30) + 1:n()
+  ) %>%
+  sample_frac() 
 
 #--------------------------------------------------------
 # run simulations in parallel
@@ -108,7 +87,10 @@ library(Pusto)
 cluster <- start_parallel(source_obj = source_obj, register = TRUE)
 
 tm <- system.time(
-  results <- plyr::mdply(params, .f = runSim, n_sim = n_empirical(Carter_n), fit_wf = TRUE, .parallel = TRUE)
+  results <- plyr::mdply(params, .f = runSim, 
+                         n_sim = n_empirical(Carter_n), 
+                         test_types = test_types,
+                         .parallel = TRUE)
 )
 
 tm 
@@ -123,4 +105,5 @@ parallel::stopCluster(cluster)
 session_info <- sessionInfo()
 run_date <- date()
 
-save(params, results, Carter_total_n, session_info, run_date, file = "simulations/funnel-plot-simulation-results.Rdata")
+save(params, results, Carter_total_n, session_info, run_date, 
+     file = "auxiliary/score-test-simulation-results.Rdata")

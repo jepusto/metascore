@@ -1,7 +1,9 @@
 
 VHSM_score_test <- function(model, steps, type = "parametric", info = "expected") {
   
-  if (!("rma.uni" %in% class(model))) error("Model must be a univariate metafor model of class rma.uni.")
+  if (!("rma.uni" %in% class(model))) {
+    return(data.frame(Q_score = NA, df = NA, p_val = NA))
+  }
 
   beta <- as.vector(model$beta)
   tau_sq <- model$tau2

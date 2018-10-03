@@ -21,7 +21,9 @@ n_beta <- function(n_max, n_min, na, nb) {
 # simulate standardized mean differences
 #--------------------------------------------
 
-r_SMD <- function(studies, mean_effect, sd_effect, n_sim, n_factor = 1L, p_thresholds = .025, p_RR = .1) {
+r_SMD <- function(studies, mean_effect, sd_effect, 
+                  n_sim, n_factor = 1L, 
+                  p_thresholds = .025, p_RR = .1) {
   
   # sample t-statistics until sufficient number of studies obtained
   dat <- data.frame()
@@ -185,6 +187,7 @@ fit_3PSM <- function(g, Vg, V_lab) {
 # fit_wf = TRUE
 
 estimate_effects <- function(dat, 
+                             steps = .025, 
                              test_types = data.frame(type = "parametric", info = "expected"),
                              max_iter = 100L,
                              step_adj = 1L) {
@@ -209,7 +212,8 @@ estimate_effects <- function(dat,
     step_adj <- step_adj / 2L
   }
   
-  score_tests <- map_dfr(test_types, .f = ~ VHSM_score_test(rma_ML, steps = .025, type = .$type, info = .$info))
+  score_tests <- map_dfr(test_types, .f = ~ VHSM_score_test(rma_ML, steps = steps, 
+                                                            type = .$type, info = .$info))
   
   map_dfr(test_types, as_data_frame) %>%
     bind_cols(score_tests)
@@ -222,10 +226,11 @@ estimate_effects <- function(dat,
 #------------------------------------------------------
 
 runSim <- function(reps, 
-                   studies, mean_effect, sd_effect, n_sim, 
-                   n_factor = 1L, p_thresholds = .025, p_RR = 1,
+                   studies, mean_effect, sd_effect, 
+                   n_sim, n_factor = 1L, 
+                   p_thresholds = .025, p_RR = 1,
                    test_types = data.frame(type = "parametric", info = "expected"), 
-                   seed = NULL, ...) {
+                   seed = NULL) {
   
   suppressPackageStartupMessages(require(purrr))
   suppressPackageStartupMessages(require(dplyr))

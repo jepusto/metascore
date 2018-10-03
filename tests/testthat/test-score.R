@@ -1,4 +1,7 @@
 context("VHSM score tests")
+library(metafor)
+library(purrr)
+library(dplyr)
 
 dat <- r_SMD(studies = 100, mean_effect = 0.1, sd_effect = 0.1,
              n_sim = n_beta(10, 50, na = 3, nb = 3),
@@ -13,8 +16,9 @@ test_types <-
     info = c("expected","observed"),
     steps = list(one = .025, two = c(.025, .500))
   ) %>%
-  purrr:cross()
+  cross()
 
+test_types <- test_types[c(-3, -7)]
 
 test_that("Score tests work for intercept only models.", {
   
