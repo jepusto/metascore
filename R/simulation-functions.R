@@ -230,7 +230,7 @@ runSim <- function(reps,
                    n_sim, n_factor = 1L, 
                    p_thresholds = .025, p_RR = 1,
                    test_types = data.frame(type = "parametric", info = "expected"), 
-                   seed = NULL) {
+                   seed = NULL, ...) {
   
   suppressPackageStartupMessages(require(purrr))
   suppressPackageStartupMessages(require(dplyr))
