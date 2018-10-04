@@ -34,12 +34,10 @@ Carter_total_n <- n0 + n1
 
 Carter_n <- round((n0 + n1) / 2)
 
-
-# dat <- r_SMD(studies = 100, mean_effect = 0.1, sd_effect = 0.0,
-#              n_sim = n_empirical(Carter_n),
-#              p_thresholds = .025, p_RR = 1)
-# studies <- nrow(dat)
-# estimate_effects(dat, test_steps = .025)
+plot(density(Carter_n))
+summary(Carter_n)
+n_empirical(Carter_n)(1000) %>% hist()
+n_beta(20, 120, 1, 3)(1000) %>% density() %>% plot()
 
 test_types <- 
   list(type = c("parametric","robust"), info = c("expected")) %>%
@@ -87,7 +85,7 @@ cluster <- start_parallel(source_obj = source_obj, register = TRUE)
 
 tm <- system.time(
   results <- plyr::mdply(params, .f = runSim, 
-                         n_sim = n_empirical(Carter_n), 
+                         n_sim = n_beta(20, 120, 1, 3), 
                          test_types = test_types,
                          .parallel = TRUE)
 )

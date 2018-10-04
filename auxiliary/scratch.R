@@ -6,8 +6,10 @@ test_types <-
   list(type = c("parametric","subscore","robust"), info = c("expected","observed")) %>%
   cross()
 
+n_beta(20, 120, 1, 3)(1000) %>% hist()
+
 runSim(reps = 4000, studies = 80, mean_effect = 0.1, sd_effect = 0.0,
-       n_sim = n_beta(20, 100, 3, 3), 
+       n_sim = n_beta(20, 120, 1, 3), 
        p_thresholds = .025, p_RR = 1, test_types = test_types)
 
 
@@ -15,11 +17,11 @@ reps <- 1000
 studies = 100
 mean_effect = 0.1
 sd_effect = 0.0
-n_sim = n_beta(n_min = 20, n_max = 100, na = 3, nb = 3)
+n_sim = n_beta(n_min = 20, n_max = 120, na = 1, nb = 3)
 p_thresholds = .025
 p_RR = 1
 
-hist(n_sim(1000))
+plot(density(n_sim(1000)))
 #--------------------------------
 # runSim innards 
 #--------------------------------

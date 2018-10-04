@@ -11,7 +11,7 @@ n_empirical <- function(n_vec) {
 
 # simulate sample size distributions from shifted, scaled beta
 
-n_beta <- function(n_max, n_min, na, nb) {
+n_beta <- function(n_min, n_max, na, nb) {
   n_diff <- n_max - n_min
   function(studies, n_factor = 1L) round(n_factor * (n_min + n_diff * rbeta(n = studies, shape1 = na, shape2 = nb)))
 }
