@@ -11,11 +11,12 @@ VHSM_score_test <- function(model, steps, type = "parametric", info = "expected"
   y <- as.vector(model$yi)
   s <- sqrt(model$vi)
   X <- model$X
+  k <- model$k
   
   prep <- null_prep(beta, tau_sq, steps, y, s, X)
   
   
-  I_mat <- null_Info(beta, tau_sq, steps, y, s, X, prep = prep, info = info)
+  I_mat <- null_Info(beta, tau_sq, steps, y, s, X, prep = prep, info = info) / k
   
   q <- length(steps)
   
@@ -25,7 +26,7 @@ VHSM_score_test <- function(model, steps, type = "parametric", info = "expected"
     
     I_mat_inv <- try_inverse(I_mat)
     
-    Q <- if (is.null(I_mat_inv)) NA else sum(I_mat_inv * tcrossprod(S_vec))
+    Q <- if (is.null(I_mat_inv)) NA else sum(I_mat_inv * tcrossprod(S_vec)) / k
     
   } else if (type == "subscore") {
     
@@ -34,7 +35,7 @@ VHSM_score_test <- function(model, steps, type = "parametric", info = "expected"
     
     I_sub_inverse <- try_inverse(I_mat[omega_index, omega_index])
     
-    Q <- if (is.null(I_sub_inverse)) NA else sum(I_sub_inverse * tcrossprod(S_vec[omega_index]))
+    Q <- if (is.null(I_sub_inverse)) NA else sum(I_sub_inverse * tcrossprod(S_vec[omega_index])) / k
     
   } else if (type == "robust") {
     
@@ -55,11 +56,11 @@ VHSM_score_test <- function(model, steps, type = "parametric", info = "expected"
       Bread <- cbind(- I_model_omega %*% I_model_inv, diag(1L, nrow = q))
       Meat <- crossprod(S_mat)
       
-      V_mat <- Bread %*% Meat %*% t(Bread)
+      V_mat <- Bread %*% Meat %*% t(Bread) / k
       
       V_inv <- try_inverse(V_mat)
       
-      Q <- if (is.null(V_inv)) NA else sum(V_inv * tcrossprod(S_omega))
+      Q <- if (is.null(V_inv)) NA else sum(V_inv * tcrossprod(S_omega)) / k
     }
     
   } else {
