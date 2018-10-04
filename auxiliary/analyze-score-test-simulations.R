@@ -7,6 +7,7 @@ results_agg <-
   mutate(rate = str_sub(rate, -3, -1)) %>%
   group_by(studies, n_factor, mean_effect, sd_effect, p_thresholds, p_RR, type, info, rate) %>%
   summarise(
+    replicates = n(),
     reps = sum(reps),
     reject = weighted.mean(reject, w = 1 - pct_NA),
     pct_NA = mean(pct_NA)
@@ -27,7 +28,7 @@ results_agg %>%
   theme_light()
 
 
-plot_rejection_rates <- function(dat) {
+plot_rejection_rates <- function(dat, scales = "free_y") {
   
   rate <- as.numeric(unique(dat$rate)) / 1000
   
@@ -36,7 +37,7 @@ plot_rejection_rates <- function(dat) {
     scale_color_brewer(type = "qual", palette = 6) + 
     expand_limits(y = 0) + 
     geom_hline(yintercept = rate) + 
-    facet_grid(studies ~ sd_effect, scales = "free_y", labeller = "label_both") + 
+    facet_grid(studies ~ sd_effect, scales = scales, labeller = "label_both") + 
     theme_light() +
     theme(strip.text = element_text(color = "black"))
   

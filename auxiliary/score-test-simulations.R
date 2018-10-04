@@ -59,7 +59,7 @@ source_obj <- ls()
 set.seed(20181002)
 
 design_factors <- list(
-  studies = c(20, 40, 80, 120),
+  studies = c(20, 40, 80, 120, 200),
   n_factor = 2L,
   mean_effect = seq(-0.5, 1, 0.1), 
   sd_effect = c(0.0, 0.01, 0.1, 0.2, 0.4),
