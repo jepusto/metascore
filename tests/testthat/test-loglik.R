@@ -97,6 +97,7 @@ test_that("Null score is consistent with score.", {
   
 })
 
+
 test_that("Null expected information is consistent with expected information", {
   
   I_VHSM_meta <- VHSM_Info(beta = weightr_est[[1]]$par[-1], 
