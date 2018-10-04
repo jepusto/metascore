@@ -24,7 +24,14 @@ VHSM_score_test <- function(model, steps, type = "parametric", info = "expected"
     
     Q <- sum(chol2inv(chol(I_mat)) * tcrossprod(S_vec))
     
-  } else {
+  } else if (type == "subscore") {
+    
+    S_vec <- null_score(beta, tau_sq, steps, y, s, X, prep = prep)
+    omega_index <- length(beta) + 1 + 1:length(steps)
+    
+    Q <- sum(chol2inv(chol(I_mat[omega_index, omega_index])) * tcrossprod(S_vec[omega_index]))
+    
+  } else if (type == "robust") {
     
     S_mat <- null_score_matrix(beta, tau_sq, steps, y, s, X, prep = prep)
     S_vec <- colSums(S_mat)
@@ -39,6 +46,10 @@ VHSM_score_test <- function(model, steps, type = "parametric", info = "expected"
     V_mat <- Bread %*% Meat %*% t(Bread)
     
     Q <- sum(chol2inv(chol(V_mat)) * tcrossprod(S_omega))
+    
+  } else {
+    
+    stop("Type must be one of 'parametric', 'subscore', or 'robust'.")
     
   }
   
