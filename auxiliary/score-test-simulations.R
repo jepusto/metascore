@@ -35,17 +35,18 @@ Carter_total_n <- n0 + n1
 Carter_n <- round((n0 + n1) / 2)
 
 
-# dat <- r_SMD(studies = 100, mean_effect = 0.1, sd_effect = 0.1,
+# dat <- r_SMD(studies = 100, mean_effect = 0.1, sd_effect = 0.0,
 #              n_sim = n_empirical(Carter_n),
-#              p_thresholds = .025, p_RR = 0.5)
+#              p_thresholds = .025, p_RR = 1)
 # studies <- nrow(dat)
+# estimate_effects(dat, test_steps = .025)
 
 test_types <- 
   list(type = c("parametric","robust"), info = c("expected")) %>%
   cross()
-  
-# runSim(reps = 1000, studies = 100, mean_effect = 0.2, sd_effect = 0.1,
-#        n_sim = n_empirical(Carter_n), n_factor = 3L, 
+
+# runSim(reps = 4000, studies = 80, mean_effect = 0.0, sd_effect = 0.0,
+#        n_sim = n_empirical(Carter_n), n_factor = 2L,
 #        p_thresholds = .025, p_RR = 1, test_types = test_types)
 
 #--------------------------------------------------------

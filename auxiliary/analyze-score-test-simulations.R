@@ -38,8 +38,13 @@ plot_rejection_rates <- function(dat, scales = "free_y") {
     expand_limits(y = 0) + 
     geom_hline(yintercept = rate) + 
     facet_grid(studies ~ sd_effect, scales = scales, labeller = "label_both") + 
+    labs(x = "Mean effect size", y = "Rejection rate",
+         color = "", linetype = "") + 
     theme_light() +
-    theme(strip.text = element_text(color = "black"))
+    theme(
+      strip.text = element_text(color = "black"),
+      legend.position = "bottom"
+    )
   
 }
 

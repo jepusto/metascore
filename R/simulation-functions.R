@@ -187,10 +187,11 @@ fit_3PSM <- function(g, Vg, V_lab) {
 # fit_wf = TRUE
 
 estimate_effects <- function(dat, 
-                             steps = .025, 
-                             test_types = data.frame(type = "parametric", info = "expected"),
+                             test_steps = .025, 
+                             test_types = list(list(type = "parametric", info = "expected")),
                              max_iter = 100L,
-                             step_adj = 1L) {
+                             step_adj = 1L,
+                             tau2_min = -min(dat$Va)) {
   
   suppressPackageStartupMessages(
     require(metafor, quietly = TRUE, warn.conflicts = FALSE)
@@ -204,7 +205,7 @@ estimate_effects <- function(dat,
     rma_ML <- suppressWarnings(
       tryCatch(
         rma(yi = g, vi = Va, data = dat, method = "ML", 
-            control = list(maxiter = max_iter, stepadj = step_adj)),
+            control = list(maxiter = max_iter, stepadj = step_adj, tau2.min = tau2_min)),
         error = function(e) NULL)
     )
     
@@ -212,7 +213,7 @@ estimate_effects <- function(dat,
     step_adj <- step_adj / 2L
   }
   
-  score_tests <- map_dfr(test_types, .f = ~ VHSM_score_test(rma_ML, steps = steps, 
+  score_tests <- map_dfr(test_types, .f = ~ VHSM_score_test(rma_ML, steps = test_steps, 
                                                             type = .$type, info = .$info))
   
   map_dfr(test_types, as_data_frame) %>%
@@ -229,6 +230,7 @@ runSim <- function(reps,
                    studies, mean_effect, sd_effect, 
                    n_sim, n_factor = 1L, 
                    p_thresholds = .025, p_RR = 1,
+                   test_steps = .025, 
                    test_types = data.frame(type = "parametric", info = "expected"), 
                    seed = NULL, ...) {
   
@@ -238,8 +240,9 @@ runSim <- function(reps,
   if (!is.null(seed)) set.seed(seed)
   
   rerun(reps, {
-    r_SMD(studies, mean_effect, sd_effect, n_sim, p_thresholds = p_thresholds, p_RR = p_RR) %>%
-      estimate_effects(test_types = test_types)  
+    r_SMD(studies, mean_effect, sd_effect, n_sim, 
+          p_thresholds = p_thresholds, p_RR = p_RR) %>%
+      estimate_effects(test_steps = test_steps, test_types = test_types)  
   }) %>%
     bind_rows() %>%
     group_by(type, info) %>% 
