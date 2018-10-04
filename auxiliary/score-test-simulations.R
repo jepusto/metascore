@@ -45,9 +45,6 @@ test_types <-
   list(type = c("parametric","robust"), info = c("expected")) %>%
   cross()
 
-# runSim(reps = 4000, studies = 80, mean_effect = 0.0, sd_effect = 0.0,
-#        n_sim = n_empirical(Carter_n), n_factor = 2L,
-#        p_thresholds = .025, p_RR = 1, test_types = test_types)
 
 #--------------------------------------------------------
 # Simulation conditions: no selection 
@@ -62,7 +59,7 @@ set.seed(20181002)
 design_factors <- list(
   studies = c(20, 40, 80, 120, 200),
   n_factor = 2L,
-  mean_effect = seq(-0.5, 1, 0.1), 
+  mean_effect = seq(-0.5, 1.5, 0.1), 
   sd_effect = c(0.0, 0.01, 0.1, 0.2, 0.4),
   p_thresholds = .025, 
   p_RR = 1L,

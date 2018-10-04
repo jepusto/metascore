@@ -181,10 +181,6 @@ fit_3PSM <- function(g, Vg, V_lab) {
 #----------------------------------------
 # Run all of the methods
 #----------------------------------------
-# conventional = TRUE
-# modified = TRUE
-# transformed = TRUE 
-# fit_wf = TRUE
 
 estimate_effects <- function(dat, 
                              test_steps = .025, 

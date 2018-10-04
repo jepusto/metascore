@@ -46,7 +46,9 @@ VHSM_score_test <- function(model, steps, type = "parametric", info = "expected"
     I_model_inv <- try_inverse(I_mat[-omega_index, -omega_index])
     
     if (is.null(I_model_inv)) {
+      
       Q <- NA 
+      
     } else {
       
       I_model_omega <- I_mat[omega_index, -omega_index]
