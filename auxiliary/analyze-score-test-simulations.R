@@ -51,17 +51,17 @@ plot_rejection_rates <- function(dat, scales = "free_y") {
 # rejection rates at alpha = .025
 
 results_agg %>%
-  filter(rate == "025") %>%
+  filter(rate == "025", sd_effect != .01) %>%
   plot_rejection_rates()
 
 # rejection rates at alpha = .05
 
 results_agg %>%
-  filter(rate == "050") %>%
+  filter(rate == "050", sd_effect != .01) %>%
   plot_rejection_rates()
 
 # rejection rates at alpha = .10
 
 results_agg %>%
-  filter(rate == "100") %>%
+  filter(rate == "100", sd_effect != .01) %>%
   plot_rejection_rates()

@@ -40,7 +40,7 @@ n_empirical(Carter_n)(1000) %>% hist()
 n_beta(20, 120, 1, 3)(1000) %>% density() %>% plot()
 
 test_types <- 
-  list(type = c("parametric","robust"), info = c("expected")) %>%
+  list(type = c("parametric","subscore","robust"), info = c("expected","observed")) %>%
   cross()
 
 
@@ -52,7 +52,7 @@ source("R/score-tests.R")
 source("R/simulation-functions.R")
 source_obj <- ls()
 
-set.seed(20181002)
+set.seed(20181004)
 
 design_factors <- list(
   studies = c(20, 40, 80, 120, 200),
