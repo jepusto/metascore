@@ -1,6 +1,12 @@
 try_inverse <- function(x) tryCatch(chol2inv(chol(x)), error = function(e) NULL)
 
-VHSM_score_test <- function(model, steps, type = "parametric", info = "expected") {
+VHSM_score_test <- function(
+  model, 
+  steps, 
+  type = "parametric", 
+  info = "expected",
+  diagnostics = FALSE
+) {
   
   if (!("rma.uni" %in% class(model))) {
     return(data.frame(Q_score = NA, df = NA, p_val = NA))
@@ -14,7 +20,6 @@ VHSM_score_test <- function(model, steps, type = "parametric", info = "expected"
   k <- model$k
   
   prep <- null_prep(beta, tau_sq, steps, y, s, X)
-  
   
   I_mat <- null_Info(beta, tau_sq, steps, y, s, X, prep = prep, info = info) / k
   
@@ -71,7 +76,25 @@ VHSM_score_test <- function(model, steps, type = "parametric", info = "expected"
   
   p_val <- pchisq(Q, df = q, lower.tail = FALSE)
 
-  data.frame(Q_score = Q, df = q, p_val = p_val)
+  if (!diagnostics) {
+    data.frame(Q_score = Q, df = q, p_val = p_val)
+  } else {
+    require(tibble)
+    data_frame(
+      Q_score = Q,
+      df = q,
+      p_val = p_val,
+      beta = beta,
+      tau_sq = tau_sq,
+      S_vec = list(S_vec),
+      Expected = list(colSums(prep$B_mat)),
+      Actual = list(prep$n_s),
+      I_mat = list(I_mat[lower.tri(I_mat,diag = TRUE)]),
+      Bread = list(as.vector(Bread)),
+      Meat = list(Meat[lower.tri(Meat,diag = TRUE)])
+    )
+  }
+  
 }
 
 

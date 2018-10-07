@@ -182,12 +182,7 @@ fit_3PSM <- function(g, Vg, V_lab) {
 # Run all of the methods
 #----------------------------------------
 
-estimate_effects <- function(dat, 
-                             test_steps = .025, 
-                             test_types = list(list(type = "parametric", info = "expected")),
-                             max_iter = 100L,
-                             step_adj = 1L,
-                             tau2_min = -min(dat$Va)) {
+fit_meta <- function(dat, max_iter = 100L, step_adj = 1L, tau2_min = -min(dat$Va)) {
   
   suppressPackageStartupMessages(
     require(metafor, quietly = TRUE, warn.conflicts = FALSE)
@@ -208,6 +203,19 @@ estimate_effects <- function(dat,
     fits <- fits + 1L
     step_adj <- step_adj / 2L
   }
+  
+  rma_ML
+}
+
+estimate_effects <- function(dat, 
+                             test_steps = .025, 
+                             test_types = list(list(type = "parametric", info = "expected")),
+                             max_iter = 100L,
+                             step_adj = 1L,
+                             tau2_min = -min(dat$Va)) {
+  
+  rma_ML <- fit_meta(dat, max_iter = max_iter, 
+                     step_adj = step_adj, tau2_min = tau2_min)
   
   score_tests <- map_dfr(test_types, .f = ~ VHSM_score_test(rma_ML, steps = test_steps, 
                                                             type = .$type, info = .$info))
