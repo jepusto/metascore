@@ -20,7 +20,7 @@ results_agg <-
 # percentage of NA results
 
 results_agg %>%
-  filter(rate == "050") %>%
+  filter(rate == "050", type != "subscore") %>%
   ggplot(aes(mean_effect, pct_NA, color = type_info, linetype = type_info)) + 
   geom_point() + geom_line() + 
   expand_limits(y = 0) + 
@@ -32,14 +32,14 @@ plot_rejection_rates <- function(dat, scales = "free_y") {
   
   rate <- as.numeric(unique(dat$rate)) / 1000
   
-  ggplot(dat, aes(mean_effect, reject, color = type_info, linetype = type_info)) + 
+  ggplot(dat, aes(mean_effect, reject, color = type_info, linetype = type_info, shape = type_info)) + 
     geom_point() + geom_line() + 
     scale_color_brewer(type = "qual", palette = 6) + 
     expand_limits(y = 0) + 
     geom_hline(yintercept = rate) + 
     facet_grid(studies ~ sd_effect, scales = scales, labeller = "label_both") + 
     labs(x = "Mean effect size", y = "Rejection rate",
-         color = "", linetype = "") + 
+         color = "", linetype = "", shape = "") + 
     theme_light() +
     theme(
       strip.text = element_text(color = "black"),
@@ -51,17 +51,25 @@ plot_rejection_rates <- function(dat, scales = "free_y") {
 # rejection rates at alpha = .025
 
 results_agg %>%
-  filter(rate == "025", sd_effect != .01) %>%
+  filter(rate == "025", info == "expected") %>%
   plot_rejection_rates()
 
 # rejection rates at alpha = .05
 
 results_agg %>%
-  filter(rate == "050", sd_effect != .01) %>%
+  filter(rate == "050") %>%
+  plot_rejection_rates()
+
+results_agg %>%
+  filter(rate == "050", info == "expected") %>%
   plot_rejection_rates()
 
 # rejection rates at alpha = .10
 
 results_agg %>%
-  filter(rate == "100", sd_effect != .01) %>%
+  filter(rate == "100") %>%
+  plot_rejection_rates()
+
+results_agg %>%
+  filter(rate == "100", info == "expected") %>%
   plot_rejection_rates()
