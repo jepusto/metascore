@@ -209,7 +209,7 @@ fit_meta <- function(dat, max_iter = 100L, step_adj = 1L, tau2_min = -min(dat$Va
 
 estimate_effects <- function(dat, 
                              test_steps = .025, 
-                             test_types = list(list(type = "parametric", info = "expected")),
+                             test_types = data.frame(type = "parametric", info = "expected", prior_mass = 0L, stringsAsFactors = FALSE),
                              max_iter = 100L,
                              step_adj = 1L,
                              tau2_min = -min(dat$Va)) {
@@ -217,11 +217,9 @@ estimate_effects <- function(dat,
   rma_ML <- fit_meta(dat, max_iter = max_iter, 
                      step_adj = step_adj, tau2_min = tau2_min)
   
-  score_tests <- map_dfr(test_types, .f = ~ VHSM_score_test(rma_ML, steps = test_steps, 
-                                                            type = .$type, info = .$info))
-  
-  map_dfr(test_types, as_data_frame) %>%
-    bind_cols(score_tests)
+  test_types %>%
+    invoke_rows(VHSM_score_test, .d = ., model = rma_ML, steps = test_steps, .to = "test_stats") %>%
+    unnest(test_stats)
 
 }
 
@@ -235,10 +233,11 @@ runSim <- function(reps,
                    n_sim, n_factor = 1L, 
                    p_thresholds = .025, p_RR = 1,
                    test_steps = .025, 
-                   test_types = data.frame(type = "parametric", info = "expected"), 
+                   test_types = data.frame(type = "parametric", info = "expected", prior_mass = 0L), 
                    seed = NULL, ...) {
   
   suppressPackageStartupMessages(require(purrr))
+  suppressPackageStartupMessages(require(purrrlyr))
   suppressPackageStartupMessages(require(dplyr))
   
   if (!is.null(seed)) set.seed(seed)
@@ -249,7 +248,7 @@ runSim <- function(reps,
       estimate_effects(test_steps = test_steps, test_types = test_types)  
   }) %>%
     bind_rows() %>%
-    group_by(type, info) %>% 
+    group_by(type, info, prior_mass) %>% 
     summarise(
       pct_NA = mean(is.na(p_val)),
       reject_025 = mean(p_val < .025, na.rm = TRUE),

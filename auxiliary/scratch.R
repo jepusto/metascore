@@ -2,11 +2,17 @@ library(tidyverse)
 devtools::load_all()
 rm(list=ls())
 
-test_types <- 
-  list(type = c("parametric","subscore","robust"), info = c("expected","observed")) %>%
-  cross()
+test_types <- list(
+  type = c("parametric","robust"), 
+  info = c("expected","observed"),
+  prior_mass = c(0, seq(0.3, 0.5, 0.05))
+) %>%
+  cross_df() %>%
+  mutate(prior_mass = ifelse(type == "robust", prior_mass, 0L)) %>%
+  distinct()
 
-runSim(reps = 4000, studies = 40, mean_effect = 1.0, sd_effect = 0.0,
+
+runSim(reps = 4000, studies = 80, mean_effect = 1.0, sd_effect = 0.1,
        n_sim = n_beta(20, 120, 1, 3), 
        p_thresholds = .025, p_RR = 1, test_types = test_types)
 
@@ -33,7 +39,7 @@ test_results <- map_dfr(meta_dat, estimate_effects,
 # summarise test results
 
 test_results %>%
-  group_by(type, info) %>% 
+  group_by(type, info, prior_mass) %>% 
   summarise(
     pct_NA = mean(is.na(p_val)),
     reject_025 = mean(p_val < .025, na.rm = TRUE),
@@ -48,7 +54,7 @@ test_results %>%
   # filter(!is.na(Q_score), type == "robust") %>%
   mutate(Q_score = pmin(Q_score, 15)) %>%
   ggplot() + 
-  geom_density(aes(x = Q_score, fill = info), alpha = 0.4) + 
+  geom_density(aes(x = Q_score, fill = factor(zero_fill)), alpha = 0.4) + 
   geom_density(data = data.frame(x = rchisq(10000, df = 1)), aes(x)) + 
   geom_vline(xintercept = qchisq(c(.9, .95, .975), df = 1), color = "darkgrey") + 
   scale_fill_brewer(type = "qual", palette = 6) + 
@@ -64,13 +70,14 @@ test_results %>%
 
 mods <- map(meta_dat, fit_meta)
 
-model <- mods[[4]]
+model <- mods[[1]]
 type <- "robust"
 info <- "expected"
 steps <- .025
+prior_mass <- 1/2
 
 test_stats <- map_dfr(mods, VHSM_score_test, steps = .025, 
-                      type = "robust", info = "expected", 
+                      type = "robust", info = "expected", prior_mass = 1/2, 
                       diagnostics = TRUE)
 
 vec_to_df <- function(x, nm = names(x)) {
@@ -101,7 +108,7 @@ ggplot(test_stats_cleaned, aes(tau_sq, Q_score, color = factor(Actual))) +
 
 ggplot(test_stats_cleaned, aes(Expected, Q_score, color = factor(Actual))) + 
   geom_point(alpha = .3) + 
-  scale_color_brewer(type = "seq", palette = 8) + 
+  scale_color_brewer(type = "seq", palette = 1) + 
   theme_dark()
 
 test_stats_cleaned %>%

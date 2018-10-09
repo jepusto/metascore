@@ -5,6 +5,7 @@ VHSM_score_test <- function(
   steps, 
   type = "parametric", 
   info = "expected",
+  prior_mass = 0L,
   diagnostics = FALSE
 ) {
   
@@ -48,7 +49,7 @@ VHSM_score_test <- function(
     S_vec <- colSums(S_mat)
     
     omega_index <- length(beta) + 1 + 1:length(steps)
-    S_omega <- S_vec[omega_index]
+    S_omega <- S_vec[omega_index] + prior_mass
     I_model_inv <- try_inverse(I_mat[-omega_index, -omega_index])
     
     if (is.null(I_model_inv)) {
