@@ -64,7 +64,7 @@ test_results %>%
 
 mods <- map(meta_dat, fit_meta)
 
-model <- mods[[3]]
+model <- mods[[4]]
 type <- "robust"
 info <- "expected"
 steps <- .025
