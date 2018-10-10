@@ -151,11 +151,22 @@ map_dfr(test_types, as_data_frame) %>%
   bind_cols(score_tests)
 
 #--------------------------------
-# VHSM_score_test innards
+# VHSM_score_test innards with
+# one big dataset
 #--------------------------------
 
-model <- rma_ML
-info <- "observed"
+studies = 50
+mean_effect = 1.0
+sd_effect = 0.1
+n_sim = n_beta(n_min = 20, n_max = 120, na = 1, nb = 3)
+p_thresholds = .025
+p_RR = 1
+test_steps <- .025
+
+dat <- r_SMD(studies, mean_effect, sd_effect, n_sim, p_thresholds = p_thresholds, p_RR = p_RR)
+mean(dat$p > .05)
+model <- fit_meta(dat)
+info <- "expected"
 steps <- test_steps
 
 beta <- as.vector(model$beta)
@@ -163,29 +174,13 @@ tau_sq <- model$tau2
 y <- as.vector(model$yi)
 s <- sqrt(model$vi)
 X <- model$X
+k <- studies 
 
 prep <- null_prep(beta, tau_sq, steps, y, s, X)
 
-I_mat <- null_Info(beta, tau_sq, steps, y, s, X, prep = prep, info = info)
-
+I_mat <- null_Info(beta, tau_sq, steps, y, s, X, prep = prep, info = info) / k
+I_mat
 q <- length(steps)
-
-# parametric
-
-S_vec <- null_score(beta, tau_sq, steps, y, s, X, prep = prep)
-
-I_mat_inv <- try_inverse(I_mat)
-
-Q <- if (is.null(I_mat_inv)) NA else sum(I_mat_inv * tcrossprod(S_vec))
-
-# subscore
-
-S_vec <- null_score(beta, tau_sq, steps, y, s, X, prep = prep)
-omega_index <- length(beta) + 1 + 1:length(steps)
-
-I_sub_inverse <- try_inverse(I_mat[omega_index, omega_index])
-
-Q <- if (is.null(I_sub_inverse)) NA else sum(I_sub_inverse * tcrossprod(S_vec[omega_index]))
 
 # robust
 
@@ -197,17 +192,63 @@ S_omega <- S_vec[omega_index]
 I_model_inv <- try_inverse(I_mat[-omega_index, -omega_index])
 
 if (is.null(I_model_inv)) {
+  
   Q <- NA 
+  
 } else {
   
   I_model_omega <- I_mat[omega_index, -omega_index]
   Bread <- cbind(- I_model_omega %*% I_model_inv, diag(1L, nrow = q))
   Meat <- crossprod(S_mat)
   
-  V_mat <- Bread %*% Meat %*% t(Bread)
+  V_mat <- Bread %*% Meat %*% t(Bread) / k
   
   V_inv <- try_inverse(V_mat)
   
-  Q <- if (is.null(V_inv)) NA else sum(V_inv * tcrossprod(S_omega))
+  Q <- if (is.null(V_inv)) NA else sum(V_inv * tcrossprod(S_omega)) / k
 }
+
+(p_val <- pchisq(Q, df = q, lower.tail = FALSE))
+
+library(dplyr)
+
+dat_augmented <-
+  dat %>%
+  bind_cols(as_tibble(S_mat)) %>%
+  mutate(
+    Sig = p < .05,
+    S_contribution = as.vector(S_mat %*% t(Bread)),
+    big_score = S_contribution > 0.4
+  )
+
+library(ggplot2)
+
+ggplot(dat_augmented, aes(S_contribution)) + 
+  geom_density() + 
+  geom_rug() + 
+  theme_minimal()
+
+ggplot(dat_augmented, aes(dl_domega)) + 
+  geom_density() + 
+  geom_rug() + 
+  theme_minimal()
+
+ggplot(dat_augmented, aes(sda, g, size = dl_domega, color = factor(Sig))) + 
+  geom_point() + 
+  expand_limits(y = 0) +
+  theme_minimal()
+
+dat_augmented %>%
+  summarise_at(vars(dl_domega, S_contribution), funs(mean, sd, rmsq = sqrt(mean(.^2)))) %>%
+  mutate(
+    sd_ratio = dl_domega_sd / S_contribution_sd,
+    rmsq_ratio = dl_domega_rmsq / S_contribution_rmsq,
+    Q = dl_domega_mean^2 * k / S_contribution_rmsq^2,
+    z = dl_domega_mean * sqrt(k) / S_contribution_rmsq
+  )
+
+mean(dat_augmented$S_contribution)
+quantile(dat_augmented$S_contribution, c(0, .05, seq(.1, .9, .1), .95, 1))
+mean(dat_augmented$S_contribution, trim = 0.05) * k * .9
+
 
