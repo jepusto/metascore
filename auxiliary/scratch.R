@@ -162,6 +162,7 @@ n_sim = n_beta(n_min = 20, n_max = 120, na = 1, nb = 3)
 p_thresholds = .025
 p_RR = 1
 test_steps <- .025
+prior_mass <- 2 / 5
 
 dat <- r_SMD(studies, mean_effect, sd_effect, n_sim, p_thresholds = p_thresholds, p_RR = p_RR)
 mean(dat$p > .05)
@@ -188,7 +189,7 @@ S_mat <- null_score_matrix(beta, tau_sq, steps, y, s, X, prep = prep)
 S_vec <- colSums(S_mat)
 
 omega_index <- length(beta) + 1 + 1:length(steps)
-S_omega <- S_vec[omega_index]
+S_omega <- S_vec[omega_index] + prior_mass
 I_model_inv <- try_inverse(I_mat[-omega_index, -omega_index])
 
 if (is.null(I_model_inv)) {
