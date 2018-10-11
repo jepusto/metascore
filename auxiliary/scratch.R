@@ -155,7 +155,7 @@ map_dfr(test_types, as_data_frame) %>%
 # one big dataset
 #--------------------------------
 
-studies = 50
+studies = 80
 mean_effect = 1.0
 sd_effect = 0.1
 n_sim = n_beta(n_min = 20, n_max = 120, na = 1, nb = 3)
@@ -186,6 +186,7 @@ q <- length(steps)
 # robust
 
 S_mat <- null_score_matrix(beta, tau_sq, steps, y, s, X, prep = prep)
+S_mat[,3] <- S_mat[,3]
 S_vec <- colSums(S_mat)
 
 omega_index <- length(beta) + 1 + 1:length(steps)

@@ -78,7 +78,7 @@ VHSM_score_test <- function(
   p_val <- pchisq(Q, df = q, lower.tail = FALSE)
 
   if (!diagnostics) {
-    data.frame(Q_score = Q, df = q, p_val = p_val)
+    data.frame(non_sig = prep$n_s[-1], Q_score = Q, df = q, p_val = p_val)
   } else {
     require(tibble)
     data_frame(

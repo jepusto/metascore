@@ -37,12 +37,9 @@ params <-
 
 test_types <- list(
   type = c("parametric","subscore","robust"), 
-  info = c("expected"),
-  prior_mass = c(0, seq(0.3, 0.5, 0.05))
+  info = c("expected")
 ) %>%
-  cross_df() %>%
-  mutate(prior_mass = ifelse(type == "robust", prior_mass, 0L)) %>%
-  distinct()
+  cross_df()
 
 
 n_sim <- n_beta(20, 120, 1, 3)

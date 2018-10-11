@@ -5,16 +5,17 @@ results_agg <-
   results %>%
   gather("rate","reject", starts_with("reject_")) %>%
   mutate(rate = str_sub(rate, -3, -1)) %>%
-  group_by(studies, n_factor, mean_effect, sd_effect, p_thresholds, p_RR, type, info, rate) %>%
+  group_by(studies, n_factor, mean_effect, sd_effect, p_thresholds, p_RR, type, info, prior_mass, rate) %>%
   summarise(
     replicates = n(),
     reps = sum(reps),
+    pct_all_sig = mean(pct_all_sig),
     reject = weighted.mean(reject, w = 1 - pct_NA),
     pct_NA = mean(pct_NA)
   ) %>%
   ungroup() %>%
   select(-n_factor, -p_thresholds, -p_RR, -reps) %>%
-  mutate(type_info = paste(type, info, sep = "-"))
+  mutate(type_info = paste(type, info, prior_mass, sep = "-"))
 
 
 # percentage of NA results
@@ -62,6 +63,10 @@ results_agg %>%
 
 results_agg %>%
   filter(rate == "050", info == "expected") %>%
+  plot_rejection_rates()
+
+results_agg %>%
+  filter(rate == "050", info == "expected", type == "robust") %>%
   plot_rejection_rates()
 
 # rejection rates at alpha = .10

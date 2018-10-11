@@ -239,6 +239,7 @@ runSim <- function(reps,
   suppressPackageStartupMessages(require(purrr))
   suppressPackageStartupMessages(require(purrrlyr))
   suppressPackageStartupMessages(require(dplyr))
+  suppressPackageStartupMessages(require(tidyr))
   
   if (!is.null(seed)) set.seed(seed)
   
@@ -250,6 +251,7 @@ runSim <- function(reps,
     bind_rows() %>%
     group_by(type, info, prior_mass) %>% 
     summarise(
+      pct_all_sig = mean(non_sig == 0),
       pct_NA = mean(is.na(p_val)),
       reject_025 = mean(p_val < .025, na.rm = TRUE),
       reject_050 = mean(p_val < .050, na.rm = TRUE),
