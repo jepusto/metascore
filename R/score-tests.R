@@ -6,11 +6,13 @@ VHSM_score_test <- function(
   type = "parametric", 
   info = "expected",
   prior_mass = 0L,
-  diagnostics = FALSE
+  return = "p-val",
+  bootstrap = FALSE,
+  ...
 ) {
   
   if (!("rma.uni" %in% class(model))) {
-    return(data.frame(Q_score = NA, df = NA, p_val = NA))
+    return(data.frame(non_sig = NA, Q_score = NA, df = NA, p_val = NA))
   }
 
   beta <- as.vector(model$beta)
@@ -21,10 +23,24 @@ VHSM_score_test <- function(
   k <- model$k
   
   prep <- null_prep(beta, tau_sq, steps, y, s, X)
+  q <- length(steps)
+  
+  if (bootstrap) {
+    BS <- wild_bootstrap(model, 
+                         stat = VHSM_score_test, 
+                         steps = steps, type = type, info = info,
+                         return = "Q", 
+                         ...)
+    res <- data.frame(
+      non_sig = prep$n_s[-1], 
+      Q_score = BS$Stat, 
+      df = q, 
+      p_val = BS$p_val
+    ) 
+    return(res)
+  }
   
   I_mat <- null_Info(beta, tau_sq, steps, y, s, X, prep = prep, info = info) / k
-  
-  q <- length(steps)
   
   if (type == "parametric") { 
     
@@ -75,27 +91,42 @@ VHSM_score_test <- function(
     
   }
   
-  p_val <- pchisq(Q, df = q, lower.tail = FALSE)
-
-  if (!diagnostics) {
-    data.frame(non_sig = prep$n_s[-1], Q_score = Q, df = q, p_val = p_val)
+  if (return == "Q") {
+    return(Q)
   } else {
-    require(tibble)
-    data_frame(
-      Q_score = Q,
-      df = q,
-      p_val = p_val,
-      beta = beta,
-      tau_sq = tau_sq,
-      S_vec = list(S_vec),
-      Expected = list(colSums(prep$B_mat)),
-      Actual = list(prep$n_s),
-      I_mat = list(I_mat[lower.tri(I_mat,diag = TRUE)]),
-      Bread = list(as.vector(Bread)),
-      Meat = list(Meat[lower.tri(Meat,diag = TRUE)])
-    )
+    p_val <- pchisq(Q, df = q, lower.tail = FALSE)
+    if (return == "p-val") {
+      
+      data.frame(
+        non_sig = prep$n_s[-1], 
+        Q_score = Q, 
+        df = q, 
+        p_val = p_val
+      ) %>%
+        return()
+      
+    } else {
+      
+      require(tibble)
+      
+      data_frame(
+        Q_score = Q,
+        df = q,
+        p_val = p_val,
+        beta = beta,
+        tau_sq = tau_sq,
+        S_vec = list(S_vec),
+        Expected = list(colSums(prep$B_mat)),
+        Actual = list(prep$n_s),
+        I_mat = list(I_mat[lower.tri(I_mat,diag = TRUE)]),
+        Bread = list(as.vector(Bread)),
+        Meat = list(Meat[lower.tri(Meat,diag = TRUE)])
+      ) %>%
+        return()
+    }
+    
   }
-  
+
 }
 
 

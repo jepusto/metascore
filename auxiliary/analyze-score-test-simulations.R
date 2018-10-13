@@ -28,6 +28,19 @@ results_agg %>%
   facet_grid(studies ~ sd_effect, scales = "free_y", labeller = "label_both") + 
   theme_light()
 
+# percentage of all significant datasets
+
+results_agg %>%
+  filter(rate == "050", type == "parametric", info == "expected", !is.na(pct_all_sig)) %>%
+  ggplot(aes(mean_effect, pct_all_sig, color = factor(studies))) + 
+  geom_point() + geom_line() + 
+  expand_limits(y = 0) + 
+  facet_wrap( ~ sd_effect, labeller = "label_both") + 
+  theme_light() + 
+  labs(x = "Mean effect size", 
+       y = "Percentage of datasets with all sig. results", 
+       color = "Number of studies")
+
 
 plot_rejection_rates <- function(dat, scales = "free_y") {
   
