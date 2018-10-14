@@ -40,3 +40,26 @@ boots <- wild_bootstrap(model,
                plot = FALSE, 
                return_boot_dist = TRUE)
 
+
+#------------------------------------------------------------
+# Compare bootstrap distribution to actual distribution
+#------------------------------------------------------------
+reps <- 1000
+meta_dat <- rerun(reps, r_SMD(studies, mean_effect, sd_effect, n_sim, p_thresholds = p_thresholds, p_RR = p_RR))
+test_types <- data_frame(type = "robust", info = "expected")
+mods <- map(meta_dat, fit_meta)
+
+test_results <- map_dfr(meta_dat, estimate_effects, 
+                        test_types = test_types, .id = "id")
+
+VHSM_score_test(mods[[1]], steps = .025, type = "robust", bootstrap = TRUE, reps = 100)
+
+boot_results <- map_dfr(mods[1:5], VHSM_score_test, 
+                        steps = .025, type = "robust", 
+                        bootstrap = TRUE, reps = 10,
+                        return_boot_dist = TRUE, .id = "id")
+
+
+ggplot(test_results, aes(Q_score)) + 
+  geom_density(fill = "blue", alpha = 0.2) + 
+  theme_minimal()
