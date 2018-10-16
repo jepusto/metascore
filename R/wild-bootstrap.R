@@ -53,3 +53,41 @@ wild_bootstrap <- function(
   data.frame(Stat = S, p_val = p_val)
   
 }
+
+n_sig <- function(yi, sei, df = Inf, step = .025) {
+  p_onesided <- pt(yi / sei, df = df, lower.tail = FALSE)
+  sum(p_onesided < step)
+}
+
+bootstrap_n_sig <- function(
+  model, 
+  step = .025,
+  reps = 999L, 
+  r_func = r_rademacher, 
+  return_boot_dist = FALSE,
+  seed = NULL
+) {
+  
+  if (!is.null(seed)) set.seed(seed)
+  
+  x_hat <- fitted(model)
+  res <- residuals(model)
+  sei <- sqrt(model$vi)
+  
+  S <- n_sig(model$yi, sei = sei, step = step)
+  
+  booties <- purrr::rerun(.n = reps, {
+    z <- r_func(k)
+    yi <- x_hat + res * z
+    n_sig(yi = yi, sei = sei, step = step)
+  })
+  
+  booties <- unlist(booties)
+  
+  if (return_boot_dist) return(booties)
+  
+  p_val <- mean(S <= booties)
+  
+  data.frame(Stat = S, p_val = p_val)
+  
+}
