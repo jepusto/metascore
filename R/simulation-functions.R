@@ -209,7 +209,8 @@ fit_meta <- function(dat, max_iter = 100L, step_adj = 1L, tau2_min = -min(dat$Va
 
 estimate_effects <- function(dat, 
                              test_steps = .025, 
-                             test_types = data.frame(type = "parametric", info = "expected", prior_mass = 0L, stringsAsFactors = FALSE),
+                             score_test_types = NULL,
+                             boot_n_sig = FALSE,
                              max_iter = 100L,
                              step_adj = 1L,
                              tau2_min = -min(dat$Va)) {
@@ -217,10 +218,27 @@ estimate_effects <- function(dat,
   rma_ML <- fit_meta(dat, max_iter = max_iter, 
                      step_adj = step_adj, tau2_min = tau2_min)
   
-  test_types %>%
-    invoke_rows(VHSM_score_test, .d = ., model = rma_ML, steps = test_steps, .to = "test_stats") %>%
-    unnest(test_stats)
+  res <- data_frame()
+  
+  if (!is.null(score_test_types)) {
+    res_score <- 
+      score_test_types %>%
+      invoke_rows(VHSM_score_test, .d = ., model = rma_ML, steps = test_steps, .to = "test_stats") %>%
+      unnest(test_stats) %>%
+      rename(Stat = Q_score)
+    
+    res <- bind_rows(res, res_score)
+  }
+  
+  if (boot_n_sig) {
+    res_n_sig <-
+      bootstrap_n_sig(model = rma_ML, step = test_steps) %>%
+      mutate(type = "bootstrap", info = "n-sig", prior_mass = NA, df = length(test_steps))
+    
+    res <- bind_rows(res, res_n_sig)
+  }
 
+  return(res)
 }
 
 
@@ -233,7 +251,8 @@ runSim <- function(reps,
                    n_sim, n_factor = 1L, 
                    p_thresholds = .025, p_RR = 1,
                    test_steps = .025, 
-                   test_types = data.frame(type = "parametric", info = "expected", prior_mass = 0L), 
+                   score_test_types = NULL, 
+                   boot_n_sig = FALSE,
                    seed = NULL, ...) {
   
   suppressPackageStartupMessages(require(purrr))
@@ -246,7 +265,9 @@ runSim <- function(reps,
   rerun(reps, {
     r_SMD(studies, mean_effect, sd_effect, n_sim, 
           p_thresholds = p_thresholds, p_RR = p_RR) %>%
-      estimate_effects(test_steps = test_steps, test_types = test_types)  
+      estimate_effects(test_steps = test_steps, 
+                       score_test_types = score_test_types, 
+                       boot_n_sig = boot_n_sig)  
   }) %>%
     bind_rows() %>%
     group_by(type, info, prior_mass) %>% 
