@@ -53,7 +53,7 @@ boots <- wild_bootstrap(model,
 #------------------------------------------------------------
 # Compare bootstrap distribution to actual distribution
 #------------------------------------------------------------
-studies = 60
+studies = 80
 mean_effect = 0.5
 sd_effect = 0.1
 n_sim = n_beta(n_min = 20, n_max = 120, na = 1, nb = 3)
@@ -78,8 +78,8 @@ test_results <- map_dfr(meta_dat, estimate_effects,
 
 wild_bootstrap(mods[[1]], stat = VHSM_score_test, steps = .025, type = "robust", return = "Q", reps = 100)
 
-boot_results <- map(mods[1:10], bootstrap_n_sig, 
-                    step = .025,
+boot_results <- map(mods[1:10], VHSM_score_test, 
+                    step = .025, type = "robust", bootstrap = TRUE,
                     return_boot_dist = TRUE)
 
 boot_df <- map_dfr(boot_results, ~ data.frame(Stat = .), .id = "id")
