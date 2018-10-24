@@ -57,9 +57,11 @@ r_SMD <- function(studies, mean_effect, sd_effect,
   
   dat <- within(dat, {
     
-    g <- J_i * sqrt(2 / n) * t
+    d <- sqrt(2 / n) * t
+    g <- J_i * d
     
-    Vg <- J_i^2 * (2 / n + g^2 / (4 * (n - 1)))
+    Vd <- 2 / n + g^2 / (4 * (n - 1))
+    Vg <- J_i^2 * Vd
     sd <- sqrt(Vg)
     
     Va <- 2 / n
@@ -182,7 +184,7 @@ fit_3PSM <- function(g, Vg, V_lab) {
 # Run all of the methods
 #----------------------------------------
 
-fit_meta <- function(dat, max_iter = 100L, step_adj = 1L, tau2_min = -min(dat$Va)) {
+fit_meta_ML <- function(dat, max_iter = 100L, step_adj = 1L, tau2_min = -min(dat$Va)) {
   
   suppressPackageStartupMessages(
     require(metafor, quietly = TRUE, warn.conflicts = FALSE)
@@ -207,16 +209,46 @@ fit_meta <- function(dat, max_iter = 100L, step_adj = 1L, tau2_min = -min(dat$Va
   rma_ML
 }
 
+fit_meta_FE_REML <- function(dat, max_iter = 100L, step_adj = 1L, tau2_min = -min(dat$Va)) {
+  
+  suppressPackageStartupMessages(
+    require(metafor, quietly = TRUE, warn.conflicts = FALSE)
+  )
+  
+  rma_ML <- NULL
+  fits <- 0L
+  
+  while (is.null(rma_ML) & fits <= 5) {
+    
+    rma_ML <- suppressWarnings(
+      tryCatch(
+        rma(yi = g, vi = Va, weights = 1 / Va, data = dat, method = "REML", 
+            control = list(maxiter = max_iter, stepadj = step_adj, tau2.min = tau2_min)),
+        error = function(e) NULL)
+    )
+    
+    fits <- fits + 1L
+    step_adj <- step_adj / 2L
+  }
+  
+  rma_ML
+}
+
 estimate_effects <- function(dat, 
                              test_steps = .025, 
                              score_test_types = NULL,
                              boot_n_sig = FALSE,
+                             boot_qscore = FALSE,
                              max_iter = 100L,
                              step_adj = 1L,
                              tau2_min = -min(dat$Va)) {
   
-  rma_ML <- fit_meta(dat, max_iter = max_iter, 
-                     step_adj = step_adj, tau2_min = tau2_min)
+  rma_ML <- fit_meta_ML(dat, max_iter = max_iter, step_adj = step_adj, tau2_min = tau2_min)
+  rma_FE_REML <- fit_meta_FE_REML(dat, max_iter = max_iter, step_adj = step_adj, tau2_min = tau2_min)
+  
+  mods <- list(ML = rma_ML, `FE-REML` = rma_FE_REML)
+  
+  n_nonsig <- nrow(dat) - n_sig(yi = dat$d, sei = dat$sda, step = test_steps)
   
   res <- data_frame()
   
@@ -232,13 +264,23 @@ estimate_effects <- function(dat,
   
   if (boot_n_sig) {
     res_n_sig <-
-      bootstrap_n_sig(model = rma_ML, step = test_steps) %>%
-      mutate(type = "bootstrap", info = "n-sig", prior_mass = NA, df = length(test_steps))
+      map_dfr(mods, bootstrap_n_sig, step = test_steps, .id = "info") %>%
+      mutate(type = "n-sig bootstrap", prior_mass = NA, df = length(test_steps))
     
     res <- bind_rows(res, res_n_sig)
   }
+  
+  if (boot_qscore) {
+    res_qscore <-
+      map_dfr(mods, bootstrap_quick_score, steps = test_steps, .id = "info") %>%
+      mutate(type = "quick score bootstrap", prior_mass = NA, df = length(test_steps))
+    
+    res <- bind_rows(res, res_qscore)
+  }
 
-  return(res)
+  res %>%
+    mutate(non_sig = n_nonsig)
+  
 }
 
 
@@ -253,6 +295,7 @@ runSim <- function(reps,
                    test_steps = .025, 
                    score_test_types = NULL, 
                    boot_n_sig = FALSE,
+                   boot_qscore = FALSE,
                    seed = NULL, ...) {
   
   suppressPackageStartupMessages(require(purrr))
@@ -267,12 +310,13 @@ runSim <- function(reps,
           p_thresholds = p_thresholds, p_RR = p_RR) %>%
       estimate_effects(test_steps = test_steps, 
                        score_test_types = score_test_types, 
-                       boot_n_sig = boot_n_sig)  
+                       boot_n_sig = boot_n_sig,
+                       boot_qscore = boot_qscore)  
   }) %>%
     bind_rows() %>%
     group_by(type, info, prior_mass) %>% 
     summarise(
-      # pct_all_sig = mean(non_sig == 0),
+      pct_all_sig = mean(non_sig == 0),
       pct_NA = mean(is.na(p_val)),
       reject_025 = mean(p_val < .025, na.rm = TRUE),
       reject_050 = mean(p_val < .050, na.rm = TRUE),

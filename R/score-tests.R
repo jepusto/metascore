@@ -110,6 +110,7 @@ VHSM_score_test <- function(
 quick_score_Q <- function(beta, tau_sq, steps, y, s, X, prep = NULL, q = length(steps)) {
   
   if (is.null(prep)) prep <- null_prep(beta, tau_sq, steps, y, s, X)
+  
   S_mat <- null_score_matrix(beta, tau_sq, steps, y, s, X, prep = prep)
   S_vec <- colSums(S_mat)
   
@@ -117,13 +118,6 @@ quick_score_Q <- function(beta, tau_sq, steps, y, s, X, prep = NULL, q = length(
   
   S_cov_inv <- try_inverse(S_cov)
   
-  Q <- if (is.null(S_cov_inv)) NA else sum(S_cov_inv * tcrossprod(S_vec)) / k
-  p_val <- pchisq(Q, df = q, lower.tail = FALSE)
-  
-  data.frame(
-    Q_score = Q, 
-    df = q, 
-    p_val = p_val
-  )
+  if (is.null(S_cov_inv)) NA else sum(S_cov_inv * tcrossprod(S_vec)) / NROW(S_mat)
   
 }

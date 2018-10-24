@@ -37,7 +37,7 @@ params <-
   sample_frac() 
 
 score_test_types <- list(
-  type = c("parametric","subscore","robust"), 
+  type = c("parametric","robust"), 
   info = c("expected")
 ) %>%
   cross_df()
@@ -56,7 +56,9 @@ cluster <- start_parallel(source_obj = source_obj, register = TRUE)
 tm <- system.time(
   results <- plyr::mdply(params, .f = runSim, 
                          n_sim = n_sim, 
+                         score_test_types = score_test_types,
                          boot_n_sig = TRUE,
+                         boot_qscore = FALSE,
                          .parallel = TRUE)
 )
 
