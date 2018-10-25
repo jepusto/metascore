@@ -2,40 +2,23 @@
 # fit Vevea-Hedges selection model
 #-------------------------------------------
 
-refit_RE <- function(model, method = "L-BFGS-B", use_gradient = TRUE, control = list()) {
- 
-  y <- as.vector(model$yi)
-  s <- sqrt(model$vi)
-  X <- model$X
-  k <- model$k
-  p <- NCOL(X)
-  
-  par <- c(model$tau2, as.vector(model$b))
-  lower <- c(-0.999 * min(s)^2, rep(-Inf, p))
-  
-  optim_args <- list(par = par, fn = VHSM_negloglik_theta, 
-                     steps = NULL, 
-                     y = y, s = s, X = X, 
-                     method = method,
-                     control = control)
-  
-  if (use_gradient) optim_args$gr <- VHSM_neg_score_theta
-  
-  if (method == "L-BFGS-B") optim_args$lower <- lower
-  
-  do.call(optim, args = optim_args)
-}
-
-fit_VHSM <- function(model, steps = .025, method = "L-BFGS-B", use_gradient = TRUE, control = list()) {
+fit_VHSM <- function(model, steps = .025, tol = 10^-3, method = "L-BFGS-B", use_gradient = TRUE, control = list()) {
   
   y <- as.vector(model$yi)
   s <- sqrt(model$vi)
   X <- model$X
   k <- model$k
   p <- NCOL(X)
+  q <- length(steps)
   
-  par <- c(model$tau2, as.vector(model$b), 1)
-  lower <- c(-0.999 * min(s)^2, rep(-Inf, p), 10^-3)
+  if (is.null(steps)) {
+    par <- c(model$tau2, as.vector(model$b))
+    lower <- c((tol - 1) * min(s)^2, rep(-Inf, p))  
+  } else {
+    par <- c(model$tau2, as.vector(model$b), rep(1, q))
+    lower <- c((tol - 1) * min(s)^2, rep(-Inf, p), rep(tol, q))  
+  }
+  
   
   optim_args <- list(par = par, fn = VHSM_negloglik_theta, 
                      steps = steps, 
