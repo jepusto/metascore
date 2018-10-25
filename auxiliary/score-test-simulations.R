@@ -2,7 +2,6 @@ rm(list=ls())
 
 library(dplyr)
 library(purrr)
-devtools::load_all()
 
 #--------------------------------------------------------
 # Simulation conditions: no selection 
@@ -31,7 +30,7 @@ prod(lengths(design_factors))
 params <-
   cross_df(design_factors) %>%
   mutate(
-    reps = 1000,
+    reps = 50,
     seed = round(runif(1) * 2^30) + 1:n()
   ) %>%
   sample_frac() 
