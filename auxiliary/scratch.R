@@ -11,13 +11,18 @@ score_test_types <- list(
   mutate(prior_mass = ifelse(type == "robust", prior_mass, 0L)) %>%
   distinct()
 
+score_test_types <- list(
+  type = c("parametric","robust"), 
+  info = c("expected")
+) %>%
+  cross_df()
 
-runSim(reps = 40, studies = 80, mean_effect = 0.5, sd_effect = 0.1,
+runSim(reps = 20, studies = 80, mean_effect = 0.5, sd_effect = 0.1,
        n_sim = n_beta(20, 120, 1, 3), 
        p_thresholds = .025, p_RR = 1, 
-       score_test_types = NULL, 
+       score_test_types = score_test_types, 
        boot_n_sig = TRUE,
-       boot_qscore = TRUE)
+       boot_qscore = FALSE)
 
 
 reps <- 4000

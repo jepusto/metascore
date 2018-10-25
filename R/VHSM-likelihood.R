@@ -28,15 +28,15 @@ VHSM_negloglik_theta <- function(theta, steps, y, s, X = matrix(rep(1, length(y)
   
   if (is.null(steps)) {
     steps <- 0.5
-    omega <- 1L
+    omega <- 1
   } else {
     q <- length(steps)
     omega <- theta[p + 1 + 1:q]
   }
 
   -1 * VHSM_loglik(
-    beta = theta[1:p], 
-    tau_sq = theta[p+1], 
+    beta = theta[1 + 1:p], 
+    tau_sq = theta[1], 
     omega = omega,
     steps = steps,
     y = y,
@@ -113,27 +113,30 @@ VHSM_neg_score_theta <- function(theta, steps, y, s, X) {
   
   if (is.null(steps)) {
     
-    -1 * null_score(
-      beta = theta[1:p],
-      tau_sq = theta[p+1],
+    score <- null_score(
+      beta = theta[1 + 1:p],
+      tau_sq = theta[1],
       steps = 0.5, 
       y = y,
       s = s,
-      X = X)[1:(p+1)]
+      X = X
+    )[1:(p+1)]
     
   } else {
     
     q <- length(steps)
     
-    -1 * VHSM_score(
-      beta = theta[1:p], 
-      tau_sq = theta[p+1], 
+    score <- VHSM_score(
+      beta = theta[1 + 1:p], 
+      tau_sq = theta[1], 
       omega = theta[p + 1 + 1:q],
       steps = steps,
       y = y,
       s = s,
       X = X)
   }
+  
+  -1 * score
   
 } 
 

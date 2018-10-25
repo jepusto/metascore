@@ -73,69 +73,6 @@ r_SMD <- function(studies, mean_effect, sd_effect,
   return(dat)
 }
 
-#-------------------------------------------
-# 3-parameter selection model
-#-------------------------------------------
-
-fit_3PSM <- function(model, step = .025, k_min = 2, method = "L-BFGS-B", control = list()) {
-  
-  y <- as.vector(model$yi)
-  s <- sqrt(model$vi)
-  X <- model$X
-  k <- model$k
-  p <- NCOL(X)
-  par <- c(as.vector(model$b), model$tau2, 1)
-  
-  # count sig and non-sig p-values
-  p_vals <- pnorm(y / s, lower.tail = FALSE)
-  ns_count <- sum(p_vals >= step)
-  
-  # if too few significant p-values, return unadjusted estimates, set p(no missing) = 1
-  
-  # if (ns_count > k  - k_min) {
-  #   
-  # }
-  
-  # if too many significant p-values, adjust step
-  new_step <- if (ns_count < k_min) mean(p_vals[rank(p_vals) %in% (k - k_min - 0:1)]) else step
-  
-  lower <- c(rep(-Inf, p), -min(s)^2, 0)
-  
-  # fit random effects model 
-  
-  null_opt <- optim(
-    par = par[-length(par)],
-    fn = VHSM_negloglik_theta,
-    gr = VHSM_neg_score_theta,
-    steps = NULL, y = y, s = s, X = X,
-    method = method,
-    lower = lower[-length(par)],
-    control = control
-  )
-  
-  # fit selection model
-  
-  VHSM_opt <- optim(
-    par = par,
-    fn = VHSM_negloglik_theta,
-    gr = VHSM_neg_score_theta,
-    steps = new_step, y = y, s = s, X = X,
-    method = method, 
-    lower = lower, 
-    control = control
-  )
-  
-  LRT <- 2 * (null_opt$value - VHSM_opt$value)
-  p_val <- pchisq(LRT, df = 1, lower.tail = FALSE)
-  
-  list(
-    RE = null_opt, 
-    `3PSM` = VHSM_opt,
-    LRT = LRT,
-    p_val = p_val
-  )
-}
-
 
 #----------------------------------------
 # Run all of the methods
