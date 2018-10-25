@@ -22,6 +22,28 @@ VHSM_loglik <- function(beta, tau_sq, omega, steps, y, s, X = matrix(rep(1, leng
   sum(log(weight_vec)) - sum(((y - mu_vec) / eta)^2) / 2 - sum(log(eta)) - sum(log(Ai))
 }
 
+VHSM_negloglik_theta <- function(theta, steps, y, s, X = matrix(rep(1, length(y)))) {
+
+  p <- NCOL(X)
+  
+  if (is.null(steps)) {
+    steps <- 0.5
+    omega <- 1L
+  } else {
+    q <- length(steps)
+    omega <- theta[p + 1 + 1:q]
+  }
+
+  -1 * VHSM_loglik(
+    beta = theta[1:p], 
+    tau_sq = theta[p+1], 
+    omega = omega,
+    steps = steps,
+    y = y,
+    s = s,
+    X = X)
+} 
+
 #---------------------------------------
 # Vevea-Hedges selection model 
 # score and Hessian
@@ -55,7 +77,7 @@ VHSM_prep <- function(beta, tau_sq, omega, steps, y, s, X) {
   
   dl_dbeta <- colSums((er / eta^2 - dA_dmu / Ai) * X)
   dl_dtausq <- sum(er^2 / eta^4) / 2 - sum(1 / eta^2) / 2 - sum(dA_dtausq / Ai)
-  dl_domega <- n_s[-1] / omega - colSums(B_mat[,-1] / Ai)
+  dl_domega <- n_s[-1] / omega - colSums(B_mat[,-1,drop=FALSE] / Ai)
   
   list(
     omega_vec = omega_vec,
@@ -84,6 +106,36 @@ VHSM_score <- function(beta, tau_sq, omega, steps, y, s, X, prep = NULL) {
   
   with(prep, c(dl_dbeta, dl_dtausq, dl_domega))
 }
+
+VHSM_neg_score_theta <- function(theta, steps, y, s, X) {
+  
+  p <- NCOL(X)
+  
+  if (is.null(steps)) {
+    
+    -1 * null_score(
+      beta = theta[1:p],
+      tau_sq = theta[p+1],
+      steps = 0.5, 
+      y = y,
+      s = s,
+      X = X)[1:(p+1)]
+    
+  } else {
+    
+    q <- length(steps)
+    
+    -1 * VHSM_score(
+      beta = theta[1:p], 
+      tau_sq = theta[p+1], 
+      omega = theta[p + 1 + 1:q],
+      steps = steps,
+      y = y,
+      s = s,
+      X = X)
+  }
+  
+} 
 
 VHSM_Info <- function(beta, tau_sq, omega, steps, y, s, X, prep = NULL) {
   

@@ -75,106 +75,63 @@ r_SMD <- function(studies, mean_effect, sd_effect,
 # 3-parameter selection model
 #-------------------------------------------
 
-fit_3PSM <- function(g, Vg, V_lab) {
+fit_3PSM <- function(model, step = .025, k_min = 2, method = "L-BFGS-B", control = list()) {
   
-  require(weightr, quietly = TRUE, warn.conflicts = FALSE)
+  y <- as.vector(model$yi)
+  s <- sqrt(model$vi)
+  X <- model$X
+  k <- model$k
+  p <- NCOL(X)
+  par <- c(as.vector(model$b), model$tau2, 1)
   
   # count sig and non-sig p-values
-  p_vals <- pnorm(g / sqrt(Vg), lower.tail = FALSE)
-  p_counts <- mean(p_vals < .025)
-  k <- length(g)
+  p_vals <- pnorm(y / s, lower.tail = FALSE)
+  ns_count <- sum(p_vals >= step)
   
   # if too few significant p-values, return unadjusted estimates, set p(no missing) = 1
   
-  if (p_counts < 2 / k) {
-    rma_fit <- tryCatch(rma(yi = g, vi = Vg), error = function(e) NULL)
-    if (is.null(rma_fit)) rma_fit <- rma(yi = g, vi = Vg, method = "FE")
-    res <- data.frame(
-      V = V_lab, estimator = "3PSM", se_method = "",
-      est = rma_fit$b[[1]], 
-      se = rma_fit$se, 
-      p_val = rma_fit$pval,
-      p_nomissing = 1
-    )  
-    return(res)
-  }
+  # if (ns_count > k  - k_min) {
+  #   
+  # }
   
-  # if all significant p-values, set selection weight for non-sig p-values to 1 / (k + 1)
-  selection_wts <- if (p_counts==1) c(1, 1 / (k + 1)) else NULL
+  # if too many significant p-values, adjust step
+  new_step <- if (ns_count < k_min) mean(p_vals[rank(p_vals) %in% (k - k_min - 0:1)]) else step
+  
+  lower <- c(rep(-Inf, p), -min(s)^2, 0)
+  
+  # fit random effects model 
+  
+  null_opt <- optim(
+    par = par[-length(par)],
+    fn = VHSM_negloglik_theta,
+    gr = VHSM_neg_score_theta,
+    steps = NULL, y = y, s = s, X = X,
+    method = method,
+    lower = lower[-length(par)],
+    control = control
+  )
   
   # fit selection model
-  wf <- suppressWarnings(
-    tryCatch(
-      weightfunct(g, Vg, steps = c(.025, 1), weights = selection_wts), 
-      error = function(e) NULL)
+  
+  VHSM_opt <- optim(
+    par = par,
+    fn = VHSM_negloglik_theta,
+    gr = VHSM_neg_score_theta,
+    steps = new_step, y = y, s = s, X = X,
+    method = method, 
+    lower = lower, 
+    control = control
   )
   
-  # return NA if errors
-  if (is.null(wf)) {
-    res <- data.frame(
-      V = V_lab, estimator = "3PSM", se_method = "",
-      est = NA, se = NA, p_val = NA,
-      p_nomissing = NA
-    )
-    return(res)
-  } 
+  LRT <- 2 * (null_opt$value - VHSM_opt$value)
+  p_val <- pchisq(LRT, df = 1, lower.tail = FALSE)
   
-  if (p_counts==1) {
-    
-    # if all significant effects
-    chol_hess <- tryCatch(chol(wf[[2]]$hessian[1:2,1:2]), error = function(e) NULL)
-    
-    if (is.null(chol_hess)) {
-      wf <- suppressWarnings(weightfunct(g, Vg, steps = c(.025, 1), weights = selection_wts, fe = TRUE))
-      est <- wf[[2]]$par[1]
-      SE <- sqrt(1 / wf[[2]]$hessian[1,1])[1]
-    } else {
-      est <- wf[[2]]$par[2]
-      SE <- sqrt(diag(chol2inv(chol_hess)))[2]
-    }
-    
-  } else {
-    
-    # if not all significant effects
-    chol_hess <- tryCatch(chol(wf[[2]]$hessian), error = function(e) NULL)
-    
-    if (is.null(chol_hess)) {
-      if (wf[[2]]$par[[1]] < 10^-4) {
-        # if tau estimate is near zero, move to FE model
-        wf <- suppressWarnings(weightfunct(g, Vg, steps = c(.025, 1), weights = selection_wts, fe = TRUE))
-        est <- wf[[2]]$par[1]
-        chol_hess <- tryCatch(chol(wf[[2]]$hessian), error = function(e) NULL)
-        SE <- if (is.null(chol_hess)) NA else sqrt(diag(chol2inv(chol_hess)))[1]
-      } else {
-        # otherwise give up
-        est <- wf[[2]]$par[2]
-        SE <- Inf
-      }
-    } else {
-      est <- wf[[2]]$par[2]
-      SE <- sqrt(diag(chol2inv(chol_hess)))[2]
-    }
-  }
-  
-  if (p_counts==1) {
-    LR_pval <- NA
-  } else {
-    lrchisq <- 2 * (abs(wf[[1]]$value - wf[[2]]$value))
-    LR_pval <- 1 - pchisq(lrchisq, 1L)
-  }
-  
-  res <- data.frame(
-    V = V_lab,
-    estimator = "3PSM",
-    se_method = "",
-    est = est,
-    se = SE,
-    p_val = (2 * pnorm(-abs(est / SE))),
-    p_nomissing = LR_pval
+  list(
+    RE = null_opt, 
+    `3PSM` = VHSM_opt,
+    LRT = LRT,
+    p_val = p_val
   )
-  
-  return(res)
-  
 }
 
 
