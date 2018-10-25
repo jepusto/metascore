@@ -10,6 +10,7 @@ devtools::load_all()
 source("R/VHSM-likelihood.R")
 source("R/score-tests.R")
 source("R/simulation-functions.R")
+source("R/wild-bootstrap.R")
 source_obj <- ls()
 
 set.seed(20181004)
@@ -21,7 +22,7 @@ design_factors <- list(
   sd_effect = c(0.0, 0.1, 0.2, 0.4),
   p_thresholds = .025, 
   p_RR = 1L,
-  replicate = 1:8
+  replicate = 1:4
 )
 
 lengths(design_factors)
@@ -35,8 +36,8 @@ params <-
   ) %>%
   sample_frac() 
 
-test_types <- list(
-  type = c("parametric","subscore","robust"), 
+score_test_types <- list(
+  type = c("parametric","robust"), 
   info = c("expected")
 ) %>%
   cross_df()
@@ -55,7 +56,9 @@ cluster <- start_parallel(source_obj = source_obj, register = TRUE)
 tm <- system.time(
   results <- plyr::mdply(params, .f = runSim, 
                          n_sim = n_sim, 
-                         test_types = test_types,
+                         score_test_types = score_test_types,
+                         boot_n_sig = TRUE,
+                         boot_qscore = FALSE,
                          .parallel = TRUE)
 )
 

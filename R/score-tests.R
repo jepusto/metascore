@@ -32,7 +32,6 @@ VHSM_score_test <- function(
                          return = "Q", 
                          ...)
     res <- data.frame(
-      non_sig = prep$n_s[-1], 
       Q_score = BS$Stat, 
       df = q, 
       p_val = BS$p_val
@@ -95,38 +94,30 @@ VHSM_score_test <- function(
     return(Q)
   } else {
     p_val <- pchisq(Q, df = q, lower.tail = FALSE)
-    if (return == "p-val") {
-      
-      data.frame(
-        non_sig = prep$n_s[-1], 
-        Q_score = Q, 
-        df = q, 
-        p_val = p_val
-      ) %>%
-        return()
-      
-    } else {
-      
-      require(tibble)
-      
-      data_frame(
-        Q_score = Q,
-        df = q,
-        p_val = p_val,
-        beta = beta,
-        tau_sq = tau_sq,
-        S_vec = list(S_vec),
-        Expected = list(colSums(prep$B_mat)),
-        Actual = list(prep$n_s),
-        I_mat = list(I_mat[lower.tri(I_mat,diag = TRUE)]),
-        Bread = list(as.vector(Bread)),
-        Meat = list(Meat[lower.tri(Meat,diag = TRUE)])
-      ) %>%
-        return()
-    }
     
+    data.frame(
+      Q_score = Q, 
+      df = q, 
+      p_val = p_val
+    ) %>%
+      return()
+      
   }
 
 }
 
 
+quick_score_Q <- function(beta, tau_sq, steps, y, s, X, prep = NULL, q = length(steps)) {
+  
+  if (is.null(prep)) prep <- null_prep(beta, tau_sq, steps, y, s, X)
+  
+  S_mat <- null_score_matrix(beta, tau_sq, steps, y, s, X, prep = prep)
+  S_vec <- colSums(S_mat)
+  
+  S_cov <- crossprod(S_mat)
+  
+  S_cov_inv <- try_inverse(S_cov)
+  
+  if (is.null(S_cov_inv)) NA else sum(S_cov_inv * tcrossprod(S_vec)) / NROW(S_mat)
+  
+}

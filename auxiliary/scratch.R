@@ -2,19 +2,22 @@ library(tidyverse)
 devtools::load_all()
 rm(list=ls())
 
-test_types <- list(
+score_test_types <- list(
   type = c("parametric","robust"), 
   info = c("expected","observed"),
-  prior_mass = c(0, seq(0.3, 0.5, 0.05))
+  prior_mass = c(0, seq(0.3, 0.8, 0.1))
 ) %>%
   cross_df() %>%
   mutate(prior_mass = ifelse(type == "robust", prior_mass, 0L)) %>%
   distinct()
 
 
-runSim(reps = 4000, studies = 80, mean_effect = 1.0, sd_effect = 0.1,
+runSim(reps = 40, studies = 80, mean_effect = 0.5, sd_effect = 0.1,
        n_sim = n_beta(20, 120, 1, 3), 
-       p_thresholds = .025, p_RR = 1, test_types = test_types)
+       p_thresholds = .025, p_RR = 1, 
+       score_test_types = NULL, 
+       boot_n_sig = TRUE,
+       boot_qscore = TRUE)
 
 
 reps <- 4000
@@ -165,6 +168,14 @@ test_steps <- .025
 prior_mass <- 2 / 5
 
 dat <- r_SMD(studies, mean_effect, sd_effect, n_sim, p_thresholds = p_thresholds, p_RR = p_RR)
+
+score_test_types <- test_types
+boot_n_sig <- TRUE
+max_iter <- 100L
+step_adj <- 1L
+tau2_min <- -min(dat$Va)
+
+
 mean(dat$p > .05)
 model <- fit_meta(dat)
 info <- "expected"
