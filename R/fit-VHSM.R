@@ -55,8 +55,13 @@ find_new_steps <- function(p_vals, steps, k_min) {
   n_count <- p_cat(p_vals, steps)
   new_steps <- steps
   p_ordered <- sort(p_vals, decreasing = TRUE)
+  J <- length(steps)
   
-  for (j in length(steps):1) {
+  for (j in 1:J) {
+    
+  }
+  
+  for (j in J:1) {
     if (n_count[[1 + j]] < k_min) {
       new_steps[j] <- mean(p_ordered[p_ordered < steps[j]][0:1 + k_min - n_count[[1 + j]]])
       n_count[j] <- n_count[[j]] - k_min + n_count[[1 + j]]

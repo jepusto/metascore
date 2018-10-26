@@ -16,7 +16,6 @@ set.seed(20181004)
 
 design_factors <- list(
   studies = c(20, 40, 80, 120, 200),
-  n_factor = 2L,
   mean_effect = seq(-0.5, 1.5, 0.1), 
   sd_effect = c(0.0, 0.1, 0.2, 0.4),
   p_thresholds = .025, 
@@ -30,14 +29,15 @@ prod(lengths(design_factors))
 params <-
   cross_df(design_factors) %>%
   mutate(
-    reps = 50,
+    reps = 1000,
     seed = round(runif(1) * 2^30) + 1:n()
   ) %>%
   sample_frac() 
 
 score_test_types <- list(
   type = c("parametric","robust"), 
-  info = c("expected")
+  info = c("expected"),
+  prior_mass = c(0, 0.5)
 ) %>%
   cross_df()
 

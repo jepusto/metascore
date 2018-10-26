@@ -10,6 +10,8 @@ sd_effect = 0.2
 n_sim = n_beta(n_min = 20, n_max = 120, na = 1, nb = 3)
 p_thresholds = .025
 p_RR = 1
+steps = c(0.01, .025, .5)
+
 
 dat <- r_SMD(studies, mean_effect, sd_effect, n_sim, p_thresholds = p_thresholds, p_RR = p_RR)
 mean(dat$p > .05)
@@ -21,7 +23,6 @@ LRT_VHSM(model, steps = steps)
 y <- model$yi
 s <- sqrt(model$vi)
 X <- model$X
-steps = c(0.01, .025, .5)
 k_min = 3
 tol = 10^-3
 use_gradient = TRUE

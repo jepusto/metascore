@@ -17,21 +17,25 @@ score_test_types <- list(
 ) %>%
   cross_df()
 
-runSim(reps = 20, studies = 80, mean_effect = 0.5, sd_effect = 0.1,
-       n_sim = n_beta(20, 120, 1, 3), 
+runSim(reps = 50, studies = 20, mean_effect = 1.2, sd_effect = 0.1,
+       n_sim = n_beta(20, 120, 1, 3), n_factor = 2L, 
        p_thresholds = .025, p_RR = 1, 
-       score_test_types = score_test_types, 
+       score_test_types = NULL, 
        boot_n_sig = TRUE,
-       boot_qscore = FALSE)
+       boot_qscore = FALSE,
+       seed = 626490488)
 
 
-reps <- 4000
-studies = 40
-mean_effect = 1.0
+reps <- 50
+studies = 20
+mean_effect = 1.2
 sd_effect = 0.1
 n_sim = n_beta(n_min = 20, n_max = 120, na = 1, nb = 3)
+n_factor = 2L
 p_thresholds = .025
 p_RR = 1
+test_steps <- p_thresholds
+seed = 626490488
 
 plot(density(n_sim(1000)))
 
@@ -39,21 +43,61 @@ plot(density(n_sim(1000)))
 # runSim innards 
 #--------------------------------
 
-meta_dat <- rerun(reps, r_SMD(studies, mean_effect, sd_effect, n_sim, p_thresholds = p_thresholds, p_RR = p_RR))
+if (!is.null(seed)) set.seed(seed)
+
+y <- rerun(reps, {
+  x <- r_SMD(studies, mean_effect, sd_effect, n_sim, 
+        p_thresholds = p_thresholds, p_RR = p_RR)
+  tryCatch(estimate_effects(x, test_steps = test_steps, 
+                     score_test_types = score_test_types, 
+                     boot_n_sig = boot_n_sig,
+                     boot_qscore = boot_qscore),
+           error = function(e) x)
+})
+
+y %>% 
+  bind_rows() %>%
+  group_by(type, info, prior_mass) %>% 
+  summarise(
+    pct_all_sig = mean(non_sig == 0),
+    pct_NA = mean(is.na(p_val)),
+    reject_025 = mean(p_val < .025, na.rm = TRUE),
+    reject_050 = mean(p_val < .050, na.rm = TRUE),
+    reject_100 = mean(p_val < .100, na.rm = TRUE)
+  )
+
+map_df(y, dim)
+
+dat <- y[[28]]
+max_iter <- 100L
+step_adj <- 1L
+tau2_min <- -min(dat$Va)
+
+estimate_effects(dat, test_steps = test_steps, 
+                 score_test_types = score_test_types, 
+                 boot_n_sig = boot_n_sig,
+                 boot_qscore = boot_qscore)
+
+meta_dat <- rerun(reps, r_SMD(studies, mean_effect, sd_effect, 
+                              n_sim = n_sim, 
+                              p_thresholds = p_thresholds, p_RR = p_RR))
 
 test_results <- map_dfr(meta_dat, estimate_effects, 
-                        test_types = test_types, .id = "id")
+                        score_test_types = NULL, boot_n_sig = TRUE, boot_qscore = FALSE,
+                        .id = "id")
 
 # summarise test results
 
 test_results %>%
   group_by(type, info, prior_mass) %>% 
   summarise(
+    pct_all_sig = mean(non_sig == 0),
     pct_NA = mean(is.na(p_val)),
     reject_025 = mean(p_val < .025, na.rm = TRUE),
     reject_050 = mean(p_val < .050, na.rm = TRUE),
     reject_100 = mean(p_val < .100, na.rm = TRUE)
   )
+
 
 # plot the distribution of Q statistics
 

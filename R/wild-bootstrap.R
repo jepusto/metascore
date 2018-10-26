@@ -81,6 +81,10 @@ bootstrap_n_sig <- function(
   seed = NULL
 ) {
   
+  if (!("rma.uni" %in% class(model))) {
+    return(data.frame(Stat = NA, p_val = NA))
+  }
+  
   if (!is.null(seed)) set.seed(seed)
   
   x_hat <- fitted(model)
@@ -114,6 +118,10 @@ bootstrap_quick_score <- function(
   return_boot_dist = FALSE,
   seed = NULL
 ) {
+
+  if (!("rma.uni" %in% class(model))) {
+    return(data.frame(Stat = NA, p_val = NA))
+  }
   
   if (!is.null(seed)) set.seed(seed)
   

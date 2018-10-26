@@ -14,7 +14,7 @@ VHSM_score_test <- function(
   if (!("rma.uni" %in% class(model))) {
     return(data.frame(non_sig = NA, Q_score = NA, df = NA, p_val = NA))
   }
-
+  
   beta <- as.vector(model$beta)
   tau_sq <- model$tau2
   y <- as.vector(model$yi)
