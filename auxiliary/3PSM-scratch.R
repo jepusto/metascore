@@ -22,7 +22,7 @@ y <- model$yi
 s <- sqrt(model$vi)
 X <- model$X
 steps = c(0.01, .025, .5)
-k_min = 2
+k_min = 3
 tol = 10^-3
 use_gradient = TRUE
 method = "L-BFGS-B"

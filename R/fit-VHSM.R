@@ -43,9 +43,33 @@ fit_VHSM <- function(y, s, X,
 # Likelihood ratio test
 #-------------------------------------------
 
+p_cat <- function(p_vals, steps) {
+  cats <- cut(p_vals, breaks = c(0, steps, 1), include.lowest = TRUE)
+  table(cats)
+}
+
+find_new_steps <- function(p_vals, steps, k_min) {
+  
+  if (length(p_vals) < k_min * (length(steps) + 1)) stop("Number of effect sizes is too small. Use fewer steps or smaller k_min.")
+  
+  n_count <- p_cat(p_vals, steps)
+  new_steps <- steps
+  p_ordered <- sort(p_vals, decreasing = TRUE)
+  
+  for (j in length(steps):1) {
+    if (n_count[[1 + j]] < k_min) {
+      new_steps[j] <- mean(p_ordered[p_ordered < steps[j]][0:1 + k_min - n_count[[1 + j]]])
+      n_count[j] <- n_count[[j]] - k_min + n_count[[1 + j]]
+      n_count[j + 1] <- k_min
+    } 
+  }
+  
+  new_steps
+}
+
 LRT_VHSM <- function(model, 
                      steps = .025, 
-                     k_min = 2, 
+                     k_min = 3L, 
                      tol = 10^-3, 
                      method = "L-BFGS-B", 
                      use_gradient = TRUE, 
@@ -56,12 +80,6 @@ LRT_VHSM <- function(model,
   y <- as.vector(model$yi)
   s <- sqrt(model$vi)
   X <- model$X
-  p_vals <- pnorm(y / s, lower.tail = FALSE)
-  cats <- cut(p_vals, breaks = c(0, steps, 1), include.lowest = TRUE)
-  ns_count <- table(cats)
-  
-  # if too many significant p-values, adjust step
-  # new_step <- if (ns_count < k_min) mean(p_vals[rank(p_vals) %in% (k - k_min - 0:1)]) else step
   
   # fit random effects model 
   
@@ -70,11 +88,16 @@ LRT_VHSM <- function(model,
                        tau_sq_start = model$tau2,
                        beta_start = as.vector(model$b),
                        tol = tol, method = method, control = control)
+
+  # adjust steps
+  
+  p_vals <- pnorm(y / s, lower.tail = FALSE)
+  new_steps <- find_new_steps(p_vals = p_vals, steps = steps, k_min = k_min)
   
   # fit selection model
   
   VHSM_opt <- fit_VHSM(y = y, s = s, X = X, 
-                       steps = steps,
+                       steps = new_steps,
                        tau_sq_start = model$tau2,
                        beta_start = as.vector(model$b),
                        tol = tol, method = method, control = control)
@@ -85,10 +108,12 @@ LRT_VHSM <- function(model,
   df <- length(steps)
   p_val <- pchisq(LRT, df = df, lower.tail = FALSE)
   
-  data.frame(
+  tibble::data_frame(
     LRT = LRT,
     df = df,
-    p_val = p_val
+    p_val = p_val,
+    RE = list(null_opt),
+    VHSM = list(VHSM_opt)
   )
   
 }
