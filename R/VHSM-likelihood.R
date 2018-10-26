@@ -75,7 +75,7 @@ VHSM_prep <- function(beta, tau_sq, omega, steps, y, s, X) {
   dB_dtausq <- (cbind(d2_mat, 0) - cbind(0, d2_mat)) / (2 * eta^2)
   dA_dtausq <- as.vector(dB_dtausq %*% omega_vec)
   
-  dl_dbeta <- colSums((er / eta^2 - dA_dmu / Ai) * X)
+  dl_dbeta <- as.vector(colSums((er / eta^2 - dA_dmu / Ai) * X))
   dl_dtausq <- sum(er^2 / eta^4) / 2 - sum(1 / eta^2) / 2 - sum(dA_dtausq / Ai)
   dl_domega <- n_s[-1] / omega - colSums(B_mat[,-1,drop=FALSE] / Ai)
   
@@ -120,7 +120,7 @@ VHSM_neg_score_theta <- function(theta, steps, y, s, X) {
       y = y,
       s = s,
       X = X
-    )[1:(p+1)]
+    )[c(p + 1, 1:p)]
     
   } else {
     
@@ -133,7 +133,8 @@ VHSM_neg_score_theta <- function(theta, steps, y, s, X) {
       steps = steps,
       y = y,
       s = s,
-      X = X)
+      X = X
+    )[c(p + 1, 1:p, p + 1 + 1:q)]
   }
   
   -1 * score
@@ -218,7 +219,7 @@ null_score <- function(beta, tau_sq, steps, y, s, X, prep = NULL) {
   
   if (is.null(prep)) prep <- null_prep(beta, tau_sq, steps, y, s, X)
   
-  dl_dbeta <- with(prep, colSums((er / eta^2) * X))
+  dl_dbeta <- with(prep, as.vector(colSums((er / eta^2) * X)))
   dl_dtausq <- with(prep, sum(er^2 / eta^4) / 2 - sum(1 / eta^2) / 2)
   dl_domega <- with(prep, n_s[-1] - colSums(B_mat[,-1,drop=FALSE]))
   
