@@ -19,10 +19,12 @@ fit_VHSM <- function(y, s, X,
   
   if (is.null(steps)) {
     par <- c(tau_sq_start, beta_start)
-    lower <- c((tol - 1) * min(s)^2, rep(-Inf, p))  
+    lower <- c((tol - 1) * min(s)^2, rep(-Inf, p))
+    upper <- rep(Inf, p + 1)
   } else {
     par <- c(tau_sq_start, beta_start, rep(1, q))
     lower <- c((tol - 1) * min(s)^2, rep(-Inf, p), rep(tol, q))  
+    upper <- c(rep(Inf, p + 1), rep(1 / tol, q))
   }
   
   optim_args <- list(par = par, fn = VHSM_negloglik_theta, 
@@ -33,10 +35,17 @@ fit_VHSM <- function(y, s, X,
   
   if (use_gradient) optim_args$gr <- VHSM_neg_score_theta
   
-  if (method == "L-BFGS-B") optim_args$lower <- lower
+  if (method == "L-BFGS-B") {
+    optim_args$lower <- lower
+    optim_args$upper <- upper
+  } 
   
-  do.call(optim, args = optim_args)
+  res <- do.call(optim, args = optim_args)
 
+  res$edge <- any(res$par == lower | res$par == upper)
+  
+  res
+    
 }
 
 #-------------------------------------------
@@ -54,16 +63,23 @@ find_new_steps <- function(p_vals, steps, k_min) {
   
   n_count <- p_cat(p_vals, steps)
   new_steps <- steps
-  p_ordered <- sort(p_vals, decreasing = TRUE)
+  p_ordered <- sort(p_vals)
+  
   J <- length(steps)
   
-  for (j in 1:J) {
-    
-  }
+  spread_to <- which.max(n_count - cumsum(pmax(k_min - n_count, 0)) > k_min)
   
-  for (j in J:1) {
+  if (spread_to > 1) {
+    for (j in 1:(spread_to - 1)) {
+      new_steps[j] <- mean(p_ordered[p_ordered > steps[j]][0:1 + k_min - n_count[[j]]])
+      n_count[j + 1] <- n_count[[j + 1]] - k_min + n_count[[j]]
+      n_count[j] <- k_min
+    }
+  }
+
+  for (j in J:spread_to) {
     if (n_count[[1 + j]] < k_min) {
-      new_steps[j] <- mean(p_ordered[p_ordered < steps[j]][0:1 + k_min - n_count[[1 + j]]])
+      new_steps[j] <- mean(rev(p_ordered[p_ordered < steps[j]])[0:1 + k_min - n_count[[1 + j]]])
       n_count[j] <- n_count[[j]] - k_min + n_count[[1 + j]]
       n_count[j + 1] <- k_min
     } 
@@ -117,6 +133,8 @@ LRT_VHSM <- function(model,
     LRT = LRT,
     df = df,
     p_val = p_val,
+    edge_RE = null_opt$edge,
+    edge_VHSM = VHSM_opt$edge,
     RE = list(null_opt),
     VHSM = list(VHSM_opt)
   )

@@ -5,35 +5,45 @@ devtools::load_all()
 rm(list=ls())
 
 studies = 50
-mean_effect = 0.9
-sd_effect = 0.2
+mean_effect = 1.0
+sd_effect = 0.1
 n_sim = n_beta(n_min = 20, n_max = 120, na = 1, nb = 3)
 p_thresholds = .025
 p_RR = 1
-steps = c(0.01, .025, .5)
+steps = .025
 
 
 dat <- r_SMD(studies, mean_effect, sd_effect, n_sim, p_thresholds = p_thresholds, p_RR = p_RR)
-mean(dat$p > .05)
+sum(dat$p > .05)
 model <- fit_meta_ML(dat)
-
-(weightr_res <- with(dat, weightfunct(effect = dat$g, v = dat$Vg, steps = c(steps, 1))))
-LRT_VHSM(model, steps = steps)
-
-y <- model$yi
-s <- sqrt(model$vi)
-X <- model$X
-k_min = 3
 tol = 10^-3
 use_gradient = TRUE
 method = "L-BFGS-B"
 control = list()
+k_min = 2L
 
+(weightr_res <- with(dat, weightfunct(effect = dat$g, v = dat$Vg, steps = c(steps, 1), table = TRUE)))
+(VHSM_res <- LRT_VHSM(model, steps = steps, k_min = k_min))
+
+LRT_VHSM(model, steps = steps, k_min = 0)
+LRT_VHSM(model, steps = steps, k_min = 1)$VHSM[[1]]$par
+
+y <- model$yi
+s <- sqrt(model$vi)
+X <- model$X
+
+p_vals <- pnorm(y / s, lower.tail = FALSE)
+p_cat(p_vals, steps)
+new_steps <- find_new_steps(p_vals = p_vals, steps = steps, k_min = k_min)
+p_cat(p_vals, new_steps)
 
 RE_nogr <- fit_VHSM(y = y, s = s, X = X, steps = NULL, use_gradient = FALSE)
 RE_grad <- fit_VHSM(y = y, s = s, X = X, steps = NULL)
 VHSM_nogr <- fit_VHSM(y = y, s = s, X = X, steps = steps, use_gradient = FALSE)
 VHSM_grad <- fit_VHSM(y = y, s = s, X = X, steps = steps)
+
+VHSM_res$VHSM[[1]]$par
+VHSM_grad$par
 
 # RE fits
 

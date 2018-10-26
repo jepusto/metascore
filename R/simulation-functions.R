@@ -133,6 +133,7 @@ estimate_effects <- function(dat,
                              score_test_types = NULL,
                              boot_n_sig = FALSE,
                              boot_qscore = FALSE,
+                             LRT_k_min = NULL,
                              max_iter = 100L,
                              step_adj = 1L,
                              tau2_min = -min(dat$Va)) {
@@ -171,6 +172,19 @@ estimate_effects <- function(dat,
     
     res <- bind_rows(res, res_qscore)
   }
+  
+  if (!is.null(LRT_k_min)) {
+    res_LRT <- 
+      map_dfr(LRT_k_min, LRT_VHSM, model = rma_ML, steps = test_steps) %>%
+      select(Stat = LRT, df, p_val) %>%
+      mutate(
+        type = "LRT",
+        info = paste("min k =", LRT_k_min),
+        prior_mass = NA
+      )
+  
+    res <- bind_rows(res, res_LRT)    
+  }
 
   res %>%
     mutate(non_sig = n_nonsig)
@@ -190,6 +204,7 @@ runSim <- function(reps,
                    score_test_types = NULL, 
                    boot_n_sig = FALSE,
                    boot_qscore = FALSE,
+                   LRT_k_min = NULL,
                    seed = NULL, ...) {
   
   suppressPackageStartupMessages(require(purrr))
@@ -205,7 +220,8 @@ runSim <- function(reps,
       estimate_effects(test_steps = test_steps, 
                        score_test_types = score_test_types, 
                        boot_n_sig = boot_n_sig,
-                       boot_qscore = boot_qscore)  
+                       boot_qscore = boot_qscore,
+                       LRT_k_min = LRT_k_min)  
   }) %>%
     bind_rows() %>%
     group_by(type, info, prior_mass) %>% 

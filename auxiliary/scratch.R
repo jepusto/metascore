@@ -4,26 +4,25 @@ rm(list=ls())
 
 score_test_types <- list(
   type = c("parametric","robust"), 
-  info = c("expected","observed"),
-  prior_mass = c(0, seq(0.3, 0.8, 0.1))
+  info = "expected",
+  prior_mass = c(0, 0.5)
 ) %>%
   cross_df() %>%
   mutate(prior_mass = ifelse(type == "robust", prior_mass, 0L)) %>%
   distinct()
 
-score_test_types <- list(
-  type = c("parametric","robust"), 
-  info = c("expected")
-) %>%
-  cross_df()
+system.time(
+  res <- runSim(reps = 1000, studies = 50, mean_effect = 0.4, sd_effect = 0.1,
+                n_sim = n_beta(20, 120, 1, 3), n_factor = 2L, 
+                p_thresholds = .025, p_RR = 1, 
+                score_test_types = score_test_types, 
+                boot_n_sig = TRUE,
+                boot_qscore = FALSE,
+                LRT_k_min = c(0L, 2L),
+                seed = 626490488)
+)
 
-runSim(reps = 50, studies = 20, mean_effect = 1.2, sd_effect = 0.1,
-       n_sim = n_beta(20, 120, 1, 3), n_factor = 2L, 
-       p_thresholds = .025, p_RR = 1, 
-       score_test_types = NULL, 
-       boot_n_sig = TRUE,
-       boot_qscore = FALSE,
-       seed = 626490488)
+res
 
 
 reps <- 50
@@ -45,45 +44,14 @@ plot(density(n_sim(1000)))
 
 if (!is.null(seed)) set.seed(seed)
 
-y <- rerun(reps, {
-  x <- r_SMD(studies, mean_effect, sd_effect, n_sim, 
-        p_thresholds = p_thresholds, p_RR = p_RR)
-  tryCatch(estimate_effects(x, test_steps = test_steps, 
-                     score_test_types = score_test_types, 
-                     boot_n_sig = boot_n_sig,
-                     boot_qscore = boot_qscore),
-           error = function(e) x)
-})
-
-y %>% 
-  bind_rows() %>%
-  group_by(type, info, prior_mass) %>% 
-  summarise(
-    pct_all_sig = mean(non_sig == 0),
-    pct_NA = mean(is.na(p_val)),
-    reject_025 = mean(p_val < .025, na.rm = TRUE),
-    reject_050 = mean(p_val < .050, na.rm = TRUE),
-    reject_100 = mean(p_val < .100, na.rm = TRUE)
-  )
-
-map_df(y, dim)
-
-dat <- y[[28]]
-max_iter <- 100L
-step_adj <- 1L
-tau2_min <- -min(dat$Va)
-
-estimate_effects(dat, test_steps = test_steps, 
-                 score_test_types = score_test_types, 
-                 boot_n_sig = boot_n_sig,
-                 boot_qscore = boot_qscore)
-
 meta_dat <- rerun(reps, r_SMD(studies, mean_effect, sd_effect, 
                               n_sim = n_sim, 
                               p_thresholds = p_thresholds, p_RR = p_RR))
 
 test_results <- map_dfr(meta_dat, estimate_effects, 
-                        score_test_types = NULL, boot_n_sig = TRUE, boot_qscore = FALSE,
+                        score_test_types = NULL, 
+                        boot_n_sig = TRUE, 
+                        boot_qscore = FALSE,
                         .id = "id")
 
 # summarise test results
@@ -216,10 +184,21 @@ p_RR = 1
 test_steps <- .025
 prior_mass <- 2 / 5
 
+
 dat <- r_SMD(studies, mean_effect, sd_effect, n_sim, p_thresholds = p_thresholds, p_RR = p_RR)
 
-score_test_types <- test_types
+score_test_types <- list(
+  type = c("parametric","robust"), 
+  info = "expected",
+  prior_mass = c(0, 0.5)
+) %>%
+  cross_df() %>%
+  mutate(prior_mass = ifelse(type == "robust", prior_mass, 0L)) %>%
+  distinct()
+
+LRT_k_min <- c(0L, 2L)
 boot_n_sig <- TRUE
+boot_qscore <- TRUE
 max_iter <- 100L
 step_adj <- 1L
 tau2_min <- -min(dat$Va)
