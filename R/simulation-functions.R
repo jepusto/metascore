@@ -78,21 +78,31 @@ r_SMD <- function(studies, mean_effect, sd_effect,
 # Run all of the methods
 #----------------------------------------
 
-fit_meta_ML <- function(dat, max_iter = 100L, step_adj = 1L, tau2_min = -min(dat$Va)) {
+fit_meta_ML <- function(dat, max_iter = 100L, step_adj = 1L, tau2_min = NULL) {
   
   suppressPackageStartupMessages(
     require(metafor, quietly = TRUE, warn.conflicts = FALSE)
   )
+  
+  require(rlang)
+  
+  if (is.null(tau2_min)) tau2_min <- -min(dat$Va)
+  
+  dat <- enexpr(dat)
   
   rma_ML <- NULL
   fits <- 0L
   
   while (is.null(rma_ML) & fits <= 5) {
     
+    control_list <- list(maxiter = max_iter, stepadj = step_adj, tau2.min = tau2_min)
+    
+    rma_call <- expr(rma(yi = g, vi = Va, data = !!dat, method = "ML", control = !!control_list))
+    
+    # rma_env <- child_env(caller_env(), control_list = control_list)
+    
     rma_ML <- suppressWarnings(
-      tryCatch(
-        rma(yi = g, vi = Va, data = dat, method = "ML", 
-            control = list(maxiter = max_iter, stepadj = step_adj, tau2.min = tau2_min)),
+      tryCatch(eval_bare(rma_call, caller_env()),
         error = function(e) NULL)
     )
     
@@ -137,6 +147,8 @@ estimate_effects <- function(dat,
                              max_iter = 100L,
                              step_adj = 1L,
                              tau2_min = -min(dat$Va)) {
+  
+  suppressPackageStartupMessages(require(purrrlyr))
   
   rma_ML <- fit_meta_ML(dat, max_iter = max_iter, step_adj = step_adj, tau2_min = tau2_min)
   rma_FE_REML <- fit_meta_FE_REML(dat, max_iter = max_iter, step_adj = step_adj, tau2_min = tau2_min)
@@ -208,7 +220,6 @@ runSim <- function(reps,
                    seed = NULL, ...) {
   
   suppressPackageStartupMessages(require(purrr))
-  suppressPackageStartupMessages(require(purrrlyr))
   suppressPackageStartupMessages(require(dplyr))
   suppressPackageStartupMessages(require(tidyr))
   
