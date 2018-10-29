@@ -19,7 +19,7 @@ design_factors <- list(
   mean_effect = seq(-0.5, 1.5, 0.1), 
   sd_effect = c(0.0, 0.1, 0.2, 0.4),
   p_thresholds = .025, 
-  p_RR = 1L,
+  p_RR = c(seq(0, 0.1,0.01), seq(0.2, 1, 0.1)),
   replicate = 1:4
 )
 
@@ -28,18 +28,22 @@ prod(lengths(design_factors))
 
 params <-
   cross_df(design_factors) %>%
+  filter(p_RR == 0 | mean_effect %in% c(0, 0.4, 0.8)) %>%
   mutate(
     reps = 1000,
     seed = round(runif(1) * 2^30) + 1:n()
   ) %>%
   sample_frac() 
 
+nrow(params)
+
 score_test_types <- list(
   type = c("parametric","robust"), 
   info = c("expected"),
   prior_mass = c(0, 0.5)
 ) %>%
-  cross_df()
+  cross_df() %>%
+  filter(type == "robust" | prior_mass == 0)
 
 LRT_k_min <- c(0L, 2L)
 
