@@ -37,12 +37,6 @@ wild_bootstrap(model,
 
 VHSM_score_test(model, steps = .025)
 
-wild_bootstrap(model, 
-               stat = VHSM_score_test, 
-               steps = .025, return = "Q", 
-               reps = 1999L,
-               plot = TRUE)
-
 boots <- wild_bootstrap(model, 
                stat = VHSM_score_test, 
                steps = .025, type = "robust", return = "Q", 
@@ -54,7 +48,7 @@ boots <- wild_bootstrap(model,
 # Compare bootstrap distribution to actual distribution
 #------------------------------------------------------------
 studies = 80
-mean_effect = 0.5
+mean_effect = 1.2
 sd_effect = 0.1
 n_sim = n_beta(n_min = 20, n_max = 120, na = 1, nb = 3)
 p_thresholds = .025
@@ -64,8 +58,6 @@ score_test_types <- data_frame(type = "robust", info = "expected", prior_mass = 
 
 reps <- 1000
 meta_dat <- rerun(reps, r_SMD(studies, mean_effect, sd_effect, n_sim, p_thresholds = p_thresholds, p_RR = p_RR))
-test_types <- data_frame(type = "robust", info = "expected")
-mods <- map(meta_dat, fit_meta_ML)
 
 # Score wild bootstrap
 
@@ -75,23 +67,37 @@ test_results <- map_dfr(meta_dat, estimate_effects,
                         boot_qscore = FALSE, 
                         .id = "id")
 
+f <- function(dat, reps = 100) {
+  mod <- fit_meta_ML(dat)
+  wild_bootstrap(mod, stat = VHSM_score_test, 
+                 steps = .025, type = "robust", 
+                 return = "Q", reps = reps,
+                 return_boot_dist = TRUE)
+}
 
-wild_bootstrap(mods[[1]], stat = VHSM_score_test, steps = .025, type = "robust", return = "Q", reps = 100)
+# f(meta_dat[[1]])
 
-boot_results <- map(mods[1:10], VHSM_score_test, 
-                    step = .025, type = "robust", bootstrap = TRUE,
-                    return_boot_dist = TRUE)
+boot_results <- 
+  map(meta_dat[1:50], f, reps = 1000) %>%
+  map_dfr(~ data.frame(Stat = .), .id = "id")
 
-boot_df <- map_dfr(boot_results, ~ data.frame(Stat = .), .id = "id")
+boot_quants <-
+  boot_results %>%
+  group_by(id) %>%
+  summarise(q95 = quantile(Stat, .95))
 
-
-test_results %>%
-  filter(info == "ML") %>%
-  ggplot(aes(Stat)) + 
+ggplot(test_results, aes(Stat)) + 
   geom_density(fill = "blue", alpha = 0.2) + 
-  geom_density(data = boot_df, aes(Stat), alpha = 0.2, fill = "purple") + 
-  geom_density(data = boot_df, aes(Stat, color = factor(id))) + 
-  theme_minimal()
+  geom_vline(xintercept = quantile(test_results$Stat, .95), color = "blue") + 
+  stat_function(fun = dchisq, args = list(df = 1), color = "red", size = 2) + 
+  coord_cartesian(ylim = c(0,1.5)) + 
+  geom_density(data = boot_results, aes(Stat), alpha = 0.2, fill = "orange") + 
+  # geom_vline(xintercept = quantile(boot_results$Stat, .95), color = "orange") + 
+  # geom_density(data = boot_results, aes(Stat, group = factor(id)), alpha = 0.2, color = "darkgrey") + 
+  # geom_vline(data = boot_quants, aes(xintercept = q95), color = "darkgrey") + 
+  theme_minimal() + 
+  theme(legend.position = "none")
+
 
 # n-sig wild bootstrap
 
