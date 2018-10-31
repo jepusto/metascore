@@ -183,11 +183,8 @@ p_thresholds = .025
 p_RR = 1
 test_steps <- .025
 prior_mass <- 2 / 5
-
-
-dat <- r_SMD(studies, mean_effect, sd_effect, n_sim, p_thresholds = p_thresholds, p_RR = p_RR)
-
 score_test_types <- list(
+  two_sided = c(TRUE, FALSE),
   type = c("parametric","robust"), 
   info = "expected",
   prior_mass = c(0, 0.5)
@@ -195,6 +192,11 @@ score_test_types <- list(
   cross_df() %>%
   mutate(prior_mass = ifelse(type == "robust", prior_mass, 0L)) %>%
   distinct()
+
+
+dat <- r_SMD(studies, mean_effect, sd_effect, n_sim, p_thresholds = p_thresholds, p_RR = p_RR)
+
+estimate_effects(dat = dat, score_test_types = score_test_types)
 
 LRT_k_min <- c(0L, 2L)
 boot_n_sig <- TRUE

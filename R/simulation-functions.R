@@ -164,7 +164,7 @@ estimate_effects <- function(dat,
       score_test_types %>%
       invoke_rows(VHSM_score_test, .d = ., model = rma_ML, steps = test_steps, .to = "test_stats") %>%
       unnest(test_stats) %>%
-      rename(Stat = Q_score)
+      rename(Stat = Score_stat)
     
     res <- bind_rows(res, res_score)
   }

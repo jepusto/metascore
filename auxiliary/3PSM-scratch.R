@@ -9,7 +9,7 @@ mean_effect = 1.0
 sd_effect = 0.1
 n_sim = n_beta(n_min = 20, n_max = 120, na = 1, nb = 3)
 p_thresholds = .025
-p_RR = 1
+p_RR = 0.1
 steps = .025
 
 
@@ -27,6 +27,8 @@ k_min = 2L
 
 LRT_VHSM(model, steps = steps, k_min = 0)
 LRT_VHSM(model, steps = steps, k_min = 1)$VHSM[[1]]$par
+(one_sided <- LRT_VHSM(model, steps = steps, k_min = k_min, two_sided = FALSE))
+one_sided$VHSM[[1]]$par
 
 y <- model$yi
 s <- sqrt(model$vi)

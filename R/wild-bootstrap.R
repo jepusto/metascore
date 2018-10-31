@@ -17,6 +17,7 @@ r_webb <- function(n) sample(sqrt(c(-3, -2, -1, 1, 2, 3) / 2), size = n, replace
 wild_bootstrap <- function(
   model, 
   stat, ..., 
+  extreme = "larger",
   update = TRUE,
   reps = 999L, 
   r_func = r_rademacher, 
@@ -61,7 +62,11 @@ wild_bootstrap <- function(
   
   if (return_boot_dist) return(booties)
   
-  p_val <- mean(S <= booties)
+  if (extreme == "larger") {
+    p_val <- mean(S <= booties)
+  } else {
+    p_val <- mean(S >= booties)
+  }
   
   data.frame(Stat = S, p_val = p_val)
   

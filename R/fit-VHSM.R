@@ -91,11 +91,13 @@ find_new_steps <- function(p_vals, steps, k_min) {
 LRT_VHSM <- function(model, 
                      steps = .025, 
                      k_min = 3L, 
+                     two_sided = TRUE,
                      tol = 10^-3, 
                      method = "L-BFGS-B", 
                      use_gradient = TRUE, 
                      control = list()) {
   
+  if (length(steps) > 1 & !two_sided) stop("One-sided tests only available for models with a single step.")
   
   # count sig and non-sig p-values
   y <- as.vector(model$yi)
@@ -127,7 +129,16 @@ LRT_VHSM <- function(model,
   
   LRT <- 2 * (null_opt$value - VHSM_opt$value)
   df <- length(steps)
-  p_val <- pchisq(LRT, df = df, lower.tail = FALSE)
+  
+  if (two_sided) {
+    p_val <- pchisq(LRT, df = df, lower.tail = FALSE)
+
+  } else {
+    
+    Z <- sign(VHSM_opt$par[length(VHSM_opt$par)] - 1) * sqrt(LRT)
+    p_val <- pnorm(Z)
+    
+  }  
   
   tibble::data_frame(
     LRT = LRT,

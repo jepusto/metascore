@@ -6,6 +6,7 @@ VHSM_score_test <- function(
   type = "parametric", 
   info = "expected",
   prior_mass = 0L,
+  two_sided = TRUE,
   return = "p-val",
   bootstrap = FALSE,
   ...
@@ -14,6 +15,8 @@ VHSM_score_test <- function(
   if (!("rma.uni" %in% class(model))) {
     return(data.frame(non_sig = NA, Q_score = NA, df = NA, p_val = NA))
   }
+  
+  if (length(steps) > 1 & !two_sided) stop("One-sided tests only available for models with a single step.")
   
   beta <- as.vector(model$beta)
   tau_sq <- model$tau2
@@ -29,10 +32,10 @@ VHSM_score_test <- function(
     BS <- wild_bootstrap(model, 
                          stat = VHSM_score_test, 
                          steps = steps, type = type, info = info,
-                         return = "Q", 
+                         two_sided = two_sided, return = "Q", 
                          ...)
     res <- data.frame(
-      Q_score = BS$Stat, 
+      Score_stat = BS$Stat, 
       df = q, 
       p_val = BS$p_val
     ) 
@@ -64,7 +67,7 @@ VHSM_score_test <- function(
     S_vec <- colSums(S_mat)
     
     omega_index <- length(beta) + 1 + 1:length(steps)
-    S_omega <- S_vec[omega_index] + prior_mass
+    S_vec <- S_vec[omega_index] + prior_mass
     I_model_inv <- try_inverse(I_mat[-omega_index, -omega_index])
     
     if (is.null(I_model_inv)) {
@@ -81,7 +84,7 @@ VHSM_score_test <- function(
       
       V_inv <- try_inverse(V_mat)
       
-      Q <- if (is.null(V_inv)) NA else sum(V_inv * tcrossprod(S_omega)) / k
+      Q <- if (is.null(V_inv)) NA else sum(V_inv * tcrossprod(S_vec)) / k
     }
     
   } else {
@@ -90,20 +93,42 @@ VHSM_score_test <- function(
     
   }
   
-  if (return == "Q") {
-    return(Q)
-  } else {
-    p_val <- pchisq(Q, df = q, lower.tail = FALSE)
+  if (two_sided) {
     
-    data.frame(
-      Q_score = Q, 
-      df = q, 
-      p_val = p_val
-    ) %>%
-      return()
+    if (return == "Q") {
+      return(Q)
+    } else {
       
+      p_val <- pchisq(Q, df = q, lower.tail = FALSE)
+      
+      data.frame(
+        Score_stat = Q, 
+        df = q, 
+        p_val = p_val
+      ) %>%
+        return()
+      
+    }
+  } else {
+    
+    Z <- sign(S_vec[length(S_vec)]) * sqrt(Q)
+    
+    if (return == "Z") {
+      return(Z)
+    } else {
+      
+      p_val <- pnorm(Z)
+      
+      data.frame(
+        Score_stat = Z,
+        df = q,
+        p_val = p_val
+      ) %>%
+        return()
+      
+    }
   }
-
+  
 }
 
 
