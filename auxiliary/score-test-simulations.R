@@ -30,7 +30,7 @@ params <-
   cross_df(design_factors) %>%
   filter(p_RR == 0 | mean_effect %in% c(0, 0.4, 0.8)) %>%
   mutate(
-    reps = 1000,
+    reps = 10,
     seed = round(runif(1) * 2^30) + 1:n()
   ) %>%
   sample_frac() 
@@ -40,7 +40,7 @@ nrow(params)
 score_test_types <- list(
   two_sided = FALSE,
   type = c("parametric","robust"), 
-  info = c("expected"),
+  info = "expected",
   prior_mass = c(0, 0.5)
 ) %>%
   cross_df() %>%
