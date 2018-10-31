@@ -7,6 +7,7 @@ library(purrr)
 # Simulation conditions: no selection 
 #--------------------------------------------------------
 source("R/VHSM-likelihood.R")
+source("R/fit-VHSM.R")
 source("R/score-tests.R")
 source("R/simulation-functions.R")
 source("R/wild-bootstrap.R")
