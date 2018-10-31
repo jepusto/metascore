@@ -19,7 +19,7 @@ design_factors <- list(
   mean_effect = seq(-0.5, 1.5, 0.1), 
   sd_effect = c(0.0, 0.1, 0.2, 0.4),
   p_thresholds = .025, 
-  p_RR = c(seq(0, 0.1,0.01), seq(0.2, 1, 0.1)),
+  p_RR = seq(0, 1,0.1),
   replicate = 1:4
 )
 
@@ -38,6 +38,7 @@ params <-
 nrow(params)
 
 score_test_types <- list(
+  two_sided = FALSE,
   type = c("parametric","robust"), 
   info = c("expected"),
   prior_mass = c(0, 0.5)
@@ -45,7 +46,11 @@ score_test_types <- list(
   cross_df() %>%
   filter(type == "robust" | prior_mass == 0)
 
-LRT_k_min <- c(0L, 2L)
+LRT_types <- list(
+  two_sided = FALSE,
+  k_min = c(0L, 2L)
+) %>%
+  cross_df()
 
 n_sim <- n_beta(20, 120, 1, 3)
 
@@ -61,9 +66,9 @@ tm <- system.time(
   results <- plyr::mdply(params, .f = runSim, 
                          n_sim = n_sim, 
                          score_test_types = score_test_types,
+                         LRT_types = LRT_types,
                          boot_n_sig = TRUE,
                          boot_qscore = FALSE,
-                         LRT_k_min = LRT_k_min,
                          .parallel = TRUE)
 )
 

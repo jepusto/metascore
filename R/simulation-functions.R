@@ -84,7 +84,7 @@ fit_meta_ML <- function(dat, max_iter = 100L, step_adj = 1L, tau2_min = NULL) {
     require(metafor, quietly = TRUE, warn.conflicts = FALSE)
   )
   
-  require(rlang)
+  require(rlang, quietly = TRUE, warn.conflicts = FALSE)
   
   if (is.null(tau2_min)) tau2_min <- -min(dat$Va)
   
@@ -141,9 +141,9 @@ fit_meta_FE_REML <- function(dat, max_iter = 100L, step_adj = 1L, tau2_min = -mi
 estimate_effects <- function(dat, 
                              test_steps = .025, 
                              score_test_types = NULL,
+                             LRT_types = NULL,
                              boot_n_sig = FALSE,
                              boot_qscore = FALSE,
-                             LRT_k_min = NULL,
                              max_iter = 100L,
                              step_adj = 1L,
                              tau2_min = -min(dat$Va)) {
@@ -169,10 +169,24 @@ estimate_effects <- function(dat,
     res <- bind_rows(res, res_score)
   }
   
+  if (!is.null(LRT_types)) {
+    res_LRT <-
+      LRT_types %>%
+      invoke_rows(LRT_VHSM, .d = ., model = rma_ML, steps = test_steps, .to = "test_stats") %>%
+      unnest(test_stats) %>%
+      select(-edge_RE, -edge_VHSM, -RE, -VHSM) %>%
+      rename(Stat = LRT) %>%
+      mutate(
+        type = "LRT"
+      )
+  
+    res <- bind_rows(res, res_LRT)    
+  }
+
   if (boot_n_sig) {
     res_n_sig <-
       map_dfr(mods, bootstrap_n_sig, step = test_steps, .id = "info") %>%
-      mutate(type = "n-sig bootstrap", prior_mass = NA, df = length(test_steps))
+      mutate(two_sided = FALSE, type = "n-sig bootstrap", df = length(test_steps))
     
     res <- bind_rows(res, res_n_sig)
   }
@@ -180,24 +194,11 @@ estimate_effects <- function(dat,
   if (boot_qscore) {
     res_qscore <-
       map_dfr(mods, bootstrap_quick_score, steps = test_steps, .id = "info") %>%
-      mutate(type = "quick score bootstrap", prior_mass = NA, df = length(test_steps))
+      mutate(two_sided = TRUE, type = "quick score bootstrap", df = length(test_steps))
     
     res <- bind_rows(res, res_qscore)
   }
   
-  if (!is.null(LRT_k_min)) {
-    res_LRT <- 
-      map_dfr(LRT_k_min, LRT_VHSM, model = rma_ML, steps = test_steps) %>%
-      select(Stat = LRT, df, p_val) %>%
-      mutate(
-        type = "LRT",
-        info = paste("min k =", LRT_k_min),
-        prior_mass = NA
-      )
-  
-    res <- bind_rows(res, res_LRT)    
-  }
-
   res %>%
     mutate(non_sig = n_nonsig)
   
@@ -214,9 +215,9 @@ runSim <- function(reps,
                    p_thresholds = .025, p_RR = 1,
                    test_steps = .025, 
                    score_test_types = NULL, 
+                   LRT_types = NULL,
                    boot_n_sig = FALSE,
                    boot_qscore = FALSE,
-                   LRT_k_min = NULL,
                    seed = NULL, ...) {
   
   suppressPackageStartupMessages(require(purrr))
@@ -225,17 +226,19 @@ runSim <- function(reps,
   
   if (!is.null(seed)) set.seed(seed)
   
+  grouping_vars <- union(names(score_test_types), names(LRT_types))
+  
   rerun(reps, {
     r_SMD(studies, mean_effect, sd_effect, n_sim, 
           p_thresholds = p_thresholds, p_RR = p_RR) %>%
       estimate_effects(test_steps = test_steps, 
                        score_test_types = score_test_types, 
+                       LRT_types = LRT_types, 
                        boot_n_sig = boot_n_sig,
-                       boot_qscore = boot_qscore,
-                       LRT_k_min = LRT_k_min)  
+                       boot_qscore = boot_qscore)  
   }) %>%
     bind_rows() %>%
-    group_by(type, info, prior_mass) %>% 
+    group_by_at(.vars = grouping_vars) %>% 
     summarise(
       pct_all_sig = mean(non_sig == 0),
       pct_NA = mean(is.na(p_val)),

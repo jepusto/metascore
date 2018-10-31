@@ -3,6 +3,7 @@ devtools::load_all()
 rm(list=ls())
 
 score_test_types <- list(
+  two_sided = FALSE,
   type = c("parametric","robust"), 
   info = "expected",
   prior_mass = c(0, 0.5)
@@ -11,15 +12,20 @@ score_test_types <- list(
   mutate(prior_mass = ifelse(type == "robust", prior_mass, 0L)) %>%
   distinct()
 
+LRT_types <- list(
+  two_sided = FALSE,
+  k_min = c(0L, 2L)
+) %>%
+  cross_df()
+
 system.time(
-  res <- runSim(reps = 1000, studies = 50, mean_effect = 0.4, sd_effect = 0.1,
+  res <- runSim(reps = 2000, studies = 80, mean_effect = 0.4, sd_effect = 0.1,
                 n_sim = n_beta(20, 120, 1, 3), n_factor = 2L, 
                 p_thresholds = .025, p_RR = 1, 
                 score_test_types = score_test_types, 
+                LRT_types = LRT_types,
                 boot_n_sig = TRUE,
-                boot_qscore = FALSE,
-                LRT_k_min = c(0L, 2L),
-                seed = 626490488)
+                boot_qscore = FALSE)
 )
 
 res
