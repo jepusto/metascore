@@ -90,18 +90,16 @@ fit_meta_ML <- function(dat, max_iter = 100L, step_adj = 1L, tau2_min = NULL) {
   
   dat <- enexpr(dat)
   
-  rma_ML <- NULL
+  rma_fit <- NULL
   fits <- 0L
   
-  while (is.null(rma_ML) & fits <= 5) {
+  while (is.null(rma_fit) & fits <= 5) {
     
     control_list <- list(maxiter = max_iter, stepadj = step_adj, tau2.min = tau2_min)
     
     rma_call <- expr(rma(yi = g, vi = Va, data = !!dat, method = "ML", control = !!control_list))
     
-    # rma_env <- child_env(caller_env(), control_list = control_list)
-    
-    rma_ML <- suppressWarnings(
+    rma_fit <- suppressWarnings(
       tryCatch(eval_bare(rma_call, caller_env()),
         error = function(e) NULL)
     )
@@ -110,32 +108,41 @@ fit_meta_ML <- function(dat, max_iter = 100L, step_adj = 1L, tau2_min = NULL) {
     step_adj <- step_adj / 2L
   }
   
-  rma_ML
+  rma_fit
 }
 
-fit_meta_FE_REML <- function(dat, max_iter = 100L, step_adj = 1L, tau2_min = -min(dat$Va)) {
+fit_meta_FE_REML <- function(dat, max_iter = 100L, step_adj = 1L, tau2_min = NULL) {
   
   suppressPackageStartupMessages(
     require(metafor, quietly = TRUE, warn.conflicts = FALSE)
   )
+
+  require(rlang, quietly = TRUE, warn.conflicts = FALSE)
   
-  rma_ML <- NULL
+  if (is.null(tau2_min)) tau2_min <- -min(dat$Va)
+  
+  dat <- enexpr(dat)
+  
+  rma_fit <- NULL
   fits <- 0L
   
-  while (is.null(rma_ML) & fits <= 5) {
+  while (is.null(rma_fit) & fits <= 5) {
+
+    control_list <- list(maxiter = max_iter, stepadj = step_adj, tau2.min = tau2_min)
     
-    rma_ML <- suppressWarnings(
-      tryCatch(
-        rma(yi = g, vi = Va, weights = 1 / Va, data = dat, method = "REML", 
-            control = list(maxiter = max_iter, stepadj = step_adj, tau2.min = tau2_min)),
-        error = function(e) NULL)
+    rma_call <- expr(rma(yi = g, vi = Va, weights = 1 / Va, data = !!dat, method = "REML", 
+                         control = !!control_list))
+    
+    rma_fit <- suppressWarnings(
+      tryCatch(eval_bare(rma_call, caller_env()),
+               error = function(e) NULL)
     )
     
     fits <- fits + 1L
     step_adj <- step_adj / 2L
   }
   
-  rma_ML
+  rma_fit
 }
 
 estimate_effects <- function(dat, 

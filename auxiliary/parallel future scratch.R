@@ -1,3 +1,7 @@
+library(tidyverse)
+library(furrr)
+devtools::load_all(".")
+rm(list=ls())
 
 design_factors <- list(
   studies = c(20, 40, 80, 120),
@@ -39,7 +43,28 @@ LRT_types <- list(
 
 n_sim <- n_beta(20, 120, 1, 3)
 
-param_list <- 
+
+evaluate_by_row <- function(params, sim_function, ..., .progress = FALSE) {
+  
+  results_list <- 
+    params %>%
+    furrr::future_pmap(., .f = sim_function, 
+                       ..., .progress = .progress)
+  
+  params %>%
+    mutate(..results = results_list) %>%
+    unnest(..results)
+
+}
+
+results <- 
   params %>% 
-  mutate(i = row_number()) %>%
-  nest(-i)
+  filter(row_number() <= 5) %>%
+  evaluate_by_row(
+    sim_function = runSim,
+    n_sim = n_sim, 
+    score_test_types = score_test_types,
+    LRT_types = LRT_types,
+    boot_n_sig = FALSE,
+    boot_qscore = FALSE
+  )
