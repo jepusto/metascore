@@ -31,7 +31,7 @@ params <-
   cross_df(design_factors) %>%
   filter(p_RR == 0 | mean_effect %in% c(0, 0.4, 0.8)) %>%
   mutate(
-    reps = 10,
+    reps = 100,
     seed = round(runif(1) * 2^30) + 1:n()
   ) %>%
   sample_frac() 
@@ -58,38 +58,36 @@ n_sim <- n_beta(20, 120, 1, 3)
 #--------------------------------------------------------
 # run simulations in parallel
 #--------------------------------------------------------
-
 library(Pusto)
 
-results <- 
-  params %>%
-  filter(row_number() <= 5) %>%
-  evaluate_by_row(
-    runSim, 
-    n_sim = n_sim, 
+# cluster <- start_parallel(source_obj = source_obj)
+# 
+# results <- 
+#    evaluate_by_row(
+#     params[1:20,], 
+#     runSim, 
+#     n_sim = n_sim, 
+#     score_test_types = score_test_types,
+#     LRT_types = LRT_types,
+#     boot_n_sig = TRUE,
+#     boot_qscore = FALSE
+#   )
+
+cluster <- start_parallel(source_obj = source_obj, setup = "register")
+
+system.time(
+  results <- plyr::mdply(
+    params[1:20,], 
+    runSim,
+    n_sim = n_sim,
     score_test_types = score_test_types,
     LRT_types = LRT_types,
     boot_n_sig = TRUE,
     boot_qscore = FALSE,
-    .parallel = TRUE
-  )
-
-cluster <- start_parallel(source_obj = source_obj, register = TRUE)
-
-tm <- system.time(
-  results <- plyr::mdply(params[1:5],, .f = runSim, 
-                         n_sim = n_sim, 
-                         score_test_types = score_test_types,
-                         LRT_types = LRT_types,
-                         boot_n_sig = TRUE,
-                         boot_qscore = FALSE,
-                         .parallel = TRUE)
+    .parallel = TRUE)
 )
 
-tm 
-parallel::stopCluster(cluster)
-
-
+stop_parallel(cluster)
 
 #--------------------------------------------------------
 # Save results and details
