@@ -61,10 +61,23 @@ n_sim <- n_beta(20, 120, 1, 3)
 
 library(Pusto)
 
+results <- 
+  params %>%
+  filter(row_number() <= 5) %>%
+  evaluate_by_row(
+    runSim, 
+    n_sim = n_sim, 
+    score_test_types = score_test_types,
+    LRT_types = LRT_types,
+    boot_n_sig = TRUE,
+    boot_qscore = FALSE,
+    .parallel = TRUE
+  )
+
 cluster <- start_parallel(source_obj = source_obj, register = TRUE)
 
 tm <- system.time(
-  results <- plyr::mdply(params, .f = runSim, 
+  results <- plyr::mdply(params[1:5],, .f = runSim, 
                          n_sim = n_sim, 
                          score_test_types = score_test_types,
                          LRT_types = LRT_types,
