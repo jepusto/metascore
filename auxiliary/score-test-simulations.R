@@ -20,7 +20,7 @@ design_factors <- list(
   mean_effect = seq(-0.5, 1.5, 0.1), 
   sd_effect = c(0.0, 0.1, 0.2, 0.4),
   p_thresholds = .025, 
-  p_RR = seq(0, 1,0.1),
+  p_RR = seq(0, 1, 0.1),
   replicate = 1:4
 )
 

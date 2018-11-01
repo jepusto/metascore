@@ -77,7 +77,7 @@ find_new_steps <- function(p_vals, steps, k_min) {
     }
   }
 
-  for (j in J:spread_to) {
+  for (j in J:min(J, spread_to)) {
     if (n_count[[1 + j]] < k_min) {
       new_steps[j] <- mean(rev(p_ordered[p_ordered < steps[j]])[0:1 + k_min - n_count[[1 + j]]])
       n_count[j] <- n_count[[j]] - k_min + n_count[[1 + j]]
