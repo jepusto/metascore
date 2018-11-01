@@ -77,7 +77,7 @@ cluster <- start_parallel(source_obj = source_obj, setup = "register")
 
 system.time(
   results <- plyr::mdply(
-    params[1:20,], 
+    params[1:272,], 
     runSim,
     n_sim = n_sim,
     score_test_types = score_test_types,
