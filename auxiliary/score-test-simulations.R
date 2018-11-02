@@ -31,7 +31,7 @@ params <-
   cross_df(design_factors) %>%
   filter(p_RR == 0 | mean_effect %in% c(0, 0.4, 0.8)) %>%
   mutate(
-    reps = 100,
+    reps = 50,
     seed = round(runif(1) * 2^30) + 1:n()
   ) %>%
   sample_frac() 
@@ -47,12 +47,8 @@ score_test_types <- list(
   cross_df() %>%
   filter(type == "robust" | prior_mass == 0)
 
-LRT_types <- list(
-  two_sided = FALSE,
-  k_min = c(0L, 2L)
-) %>%
-  cross_df()
-
+LRT_types <- data_frame(two_sided = FALSE, k_min = 2L)
+  
 n_sim <- n_beta(20, 120, 1, 3)
 
 #--------------------------------------------------------
@@ -77,7 +73,7 @@ cluster <- start_parallel(source_obj = source_obj, setup = "register")
 
 system.time(
   results <- plyr::mdply(
-    params[1:544,], 
+    params[1:272,], 
     runSim,
     n_sim = n_sim,
     score_test_types = score_test_types,

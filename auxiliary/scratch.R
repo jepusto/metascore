@@ -26,8 +26,8 @@ system.time(
                 score_test_types = score_test_types, 
                 LRT_types = LRT_types,
                 boot_n_sig = TRUE,
-                boot_qscore = FALSE,
-                seed = 323491428)
+                boot_qscore = TRUE,
+                seed = NULL)
 )
 
 res
