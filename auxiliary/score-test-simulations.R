@@ -31,7 +31,7 @@ params <-
   cross_df(design_factors) %>%
   filter(p_RR == 0 | mean_effect %in% c(0, 0.4, 0.8)) %>%
   mutate(
-    reps = 100,
+    reps = 50,
     seed = round(runif(1) * 2^30) + 1:n()
   ) %>%
   sample_frac() 
