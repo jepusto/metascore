@@ -47,12 +47,8 @@ score_test_types <- list(
   cross_df() %>%
   filter(type == "robust" | prior_mass == 0)
 
-LRT_types <- list(
-  two_sided = FALSE,
-  k_min = c(0L, 2L)
-) %>%
-  cross_df()
-
+LRT_types <- data_frame(two_sided = FALSE, k_min = 2L)
+  
 n_sim <- n_beta(20, 120, 1, 3)
 
 #--------------------------------------------------------
@@ -77,7 +73,7 @@ cluster <- start_parallel(source_obj = source_obj, setup = "register")
 
 system.time(
   results <- plyr::mdply(
-    params[1:544,], 
+    params[1:272,], 
     runSim,
     n_sim = n_sim,
     score_test_types = score_test_types,
