@@ -21,7 +21,7 @@ design_factors <- list(
   sd_effect = c(0.0, 0.1, 0.2, 0.4),
   p_thresholds = .025, 
   p_RR = seq(0, 1, 0.1),
-  replicate = 1:4
+  replicate = 1:2
 )
 
 lengths(design_factors)
@@ -31,7 +31,7 @@ params <-
   cross_df(design_factors) %>%
   filter(p_RR == 0 | mean_effect %in% c(0, 0.4, 0.8)) %>%
   mutate(
-    reps = 50,
+    reps = 1000,
     seed = round(runif(1) * 2^30) + 1:n()
   ) %>%
   sample_frac() 
@@ -73,7 +73,7 @@ cluster <- start_parallel(source_obj = source_obj, setup = "register")
 
 system.time(
   results <- plyr::mdply(
-    params[1:272,], 
+    params, 
     runSim,
     n_sim = n_sim,
     score_test_types = score_test_types,
