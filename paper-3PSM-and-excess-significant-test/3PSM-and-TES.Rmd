@@ -1,5 +1,5 @@
 ---
-title             : "A note on the Test of Excess Significance and weight-function models for selective publication"
+title             : "On the connection between the Test of Excess Significance and weight-function models for selective publication"
 shorttitle        : "TES and Vevea-Hedges Selection Models"
 
 author: 
@@ -17,7 +17,7 @@ authornote: |
   James E. Pustejovsky, Educational Psychology Department, University of Texas at Austin.
 
 abstract: |
-  Publication bias and other forms of selective outcome reporting are important threats to the validity of findings from research syntheses---even undermining their special status for informing evidence-based practice and policy guidance. An array of methods have been proposed for detecting selective publication. In particular, Ioannidis and Trikalinos (2007) proposed the Test of Excess Significance (TES), which diagnoses publication bias by comparing the observed number of statistically significant effect sizes to the number expected based on the power of included studies to detect the estimated average effect. Another approach is based on explicit modeling of the selective publication process, as in the weight function model developed by Hedges (1992) and Vevea and Hedges (1995). Under the weight function model, a likelihood ratio test can be used to test for the presence of selective publication. In this note, I demonstrate a connection between these two methods, namely, that TES is based on the score function of a simple form of the weight function model. This connection motivates a refinement to TES that improves its operating characteristics and allows for between-study heterogeneity through random effects and regression on study characteristics. After describing the refined test, I report a small simulation evaluating its calibration and power compared to conventional TES, a likelihood ratio test based on the weight function model, and p-uniform. 
+  Publication bias and other forms of selective outcome reporting are important threats to the validity of findings from research syntheses---even undermining their special status for informing evidence-based practice and policy guidance. An array of methods have been proposed for detecting selective publication. In particular, Ioannidis and Trikalinos (2007) proposed the Test of Excess Significance (TES), which diagnoses publication bias by comparing the observed number of statistically significant effect sizes to the number expected based on the power of included studies to detect the estimated average effect. Another approach is based on explicit modeling of the selective publication process, as in the weight function model developed by Hedges (1992) and Vevea and Hedges (1995). Under the weight function model, a likelihood ratio test can be used to test for the presence of selective publication. This note demonstrates a connection between these two methods, namely, that TES is based on the score function of a simple form of the weight function model. This connection motivates  a refinement to TES that improves its operating characteristics and allow for between-study heterogeneity through random effects and regression on study characteristics. After describing the refined test, I report a small simulation evaluating its calibration and power compared to conventional TES, a likelihood ratio test based on the weight function model, and p-uniform. 
 
 keywords          : "keywords"
 wordcount         : "X"
@@ -67,29 +67,30 @@ A brief discussion section highlights limitations and future directions.
 
 # A selection of tests for selective publication {#tests}
 
-In what follows, let us consider a meta-analysis where a conventional random effects model might be applied to a set of $k$ studies. 
+Consider a meta-analysis of $k$ studies, where a conventional random effects model might be applied. 
 Let $T_i$ denote the effect size estimate from study $i$, with standard error $\sigma_i$, each for $i = 1,...,k$. Let $\theta_i$ denote the true effect size parameter from study $i$. 
 I shall assume that the included studies are large enough that it is reasonable to treat $T_i$ as following a normal distribution: $T_i \sim N(\theta_i, \sigma_i^2)$. 
 Under a random effects model, and in the absence of selective publication, the true effects are assumed to follow a normal distribution with mean $\mu$ and standard deviation $\tau$. 
 
 Let $\alpha$ denote the conventional type-I error level used for one-sided hypothesis tests; in areas of research that typically use two-sided tests and the .05 level to determine significance, the one-sided level would be $\alpha = .025$. 
-Let $Phi(x)$ denote the standard normal cumulative distribution function, with quantile function $\Phi^{-1}(p)$ and density function $\phi(x)$. 
+Let $\Phi(x)$ and $\phi(x)$ denote the standard normal cumulative distribution and density function, respectively. 
+Let $z_\alpha$ denote the standard normal $\alpha$-level critical value, that is, $z_\alpha = \Phi^{-1}(1 - \alpha)$. 
 Let $S_i$ be an indicator for the statistical significance of study $i$, so that $S_i = 1$ when $T_i / \sigma_i > \Phi^{-1}(1 - \alpha)$ and $S_i = 0$ otherwise.
 
 ## Test of Excess Significance
 
-As a test of selective publication, @ioannidis2007ExploratoryTestExcess proposed to compare the number of statistically significant effects among the set of $k$ studies to the number of significant effects expected if there is no selection. 
+As a test of selective publication, @ioannidis2007ExploratoryTestExcess proposed to compare the number of statistically significant effects among the set of $k$ studies to the number of significant effects expected if there were no selection. 
 The observed number of significant effects is $O = \sum_{i=1}^K S_i$. 
 In the absence of selection, the expected number of effects is the sum of the power of each study to detect a true effect of a given size. 
 Letting $P_i(\mu,\tau^2)$ denote the power of study $i$ under a random effects model, which is equal to
 \begin{equation} 
-P_i(\mu,\tau^2) = 1 - \Phi\left( \frac{\sigma_i \Phi^{-1}(1 - \alpha) - \mu}{\sqrt{\tau^2 + \sigma_i^2}}\right).
+P_i(\mu,\tau^2) = 1 - \Phi\left( \frac{\sigma_i z_\alpha - \mu}{\sqrt{\tau^2 + \sigma_i^2}}\right).
 (\#eq:power)
 \end{equation}
 The expected number of significant effects is then $E(\mu, \tau^2) = \sum_{i=1}^k P_i(\mu, \tau^2)$, a quantity that depends on the unknown average effect $\mu$ and between-study heterogeneity $\tau$. 
 @ioannidis2007ExploratoryTestExcess suggested estimating expected power based on a fixed effect meta-analysis, taking $\hat{E} = E(\hat\mu^{FE}, 0)$, where $\hat\mu^{FE}$ is the usual fixed effect average.
 They justify this approach by arguing that heterogeneity is often negligible and that, if there is selective publication, the fixed effect average is less biased than the random effects average. 
-Subsequent applications of TES have typically followed this approach.
+Subsequent applications of TES have typically followed this approach.\todo{Is this true?} 
 
 @ioannidis2007ExploratoryTestExcess proposed two approximate tests for drawing an inference about whether the set of included studies has been selected for statistical significance. First, they suggest using the test statistic
 \begin{equation}
@@ -100,7 +101,7 @@ compared to a $\chi^2_1$ reference distribution.
 Alternately, they suggest using a binomial test, comparing $O$ to a binomial reference distribution with size $k$ and probability $\hat{E} / k$.
 Applications of TES have typically followed the latter approach.\todo{Is this true?} 
 
-Both variants of TES involve approximations because they treat the expected number of studies as known with certainty, whereas in practice it must be estimated, and because power is not constant across studies unless all included studies are equally precise.
+Both variants of TES involve approximations. One approximation arises from treating the expected number of studies as known with certainty, whereas in practice it must be estimated. Further, using a binomial reference distribution amounts to assuming that power is constant across studies, which will not be the case unless all included studies are equally precise.
 Calculating $\hat{E}$ under a fixed effect model entails the further assumption that between-study heterogeneity is negligible [@johnson2007CommentsExploratoryTest].
 Thus, one might expect that the type I error rate of the tests may be distorted when studies vary in precision or are truly heterogeneous.
 Indeed, @vanassen2015MetaanalysisUsingEffect reported simulation results in which TES had below-nominal type I error, even when all studies are equally precise. 
@@ -110,19 +111,20 @@ TES is an exploratory test for selective publication, intended to be used as a s
 ## Weight function selection models
 
 Many meta-analytic models have been developed that make specific assumptions about the process of selective publication. 
-One such class of models, often called "weight function" models, assume that selective publication of effect sizes depends on a piece-wise constant function of the statistical significance of the effect size estimate. 
+One such class of models, often called "weight function" models, assume that the probability of publication depends on a piece-wise constant function of the statistical significance of the effect size estimate. 
 Building on earlier work by @iyengar1988SelectionModelsFile, @hedges1992ModelingPublicationSelection and @dear1992ApproachAssessingPublication proposed weight function models that allow for heterogeneity in true effect sizes. 
 @vevea1995GeneralLinearModel further developed the approach to allow for moderators of effect size through a meta-regression model.
 Based on several extensive Monte Carlo simulations, a very simple, three-parameter version of the weight function model has recently been highlighted as a promising technique for dealing with selective publication [@mcshane2016AdjustingPublicationBias; @carter2018CorrectingBiasPsychology].
-Here, I limit consideration to this three-parameter model because it is mostly directly connected to TES.
+I limit consideration to this three-parameter model because it is mostly directly connected to TES.
 I discuss a more general form of the weight function model in the Appendix. 
 
 The weight function model involves two components: a sampling model and a selection model. Following @hedges1992ModelingPublicationSelection, the sampling model assumes that effect size estimates follow a basic random effects model as outlined previously. However, not all effect sizes are published (or more generally, not all effect sizes are available for inclusion in the meta-analysis). Rather, the probability that an effect size estimate is included is a multiple of the weight function
 \begin{equation}
-w(T_i, \sigma_i) = \begin{cases} 1 & \text{if} \quad T_i > \sigma_i \Phi^{-1}(1 - \alpha) \\ \pi & \text{if} \quad T_i \leq \sigma_i \Phi^{-1}(1 - \alpha) \end{cases}
+w(T_i, \sigma_i) = \begin{cases} 1 & \text{if} \quad T_i > \sigma_i z_\alpha \\ \pi & \text{if} \quad T_i \leq \sigma_i z_\alpha \end{cases}
 (\#eq:weight-function)
 \end{equation}
-for $\pi \geq 0$. Here $\pi$ is the probability that a statistically insignificant effect size is included, relative to the inclusion probability for an equally precise, statistically significant effect size. 
+where $\pi \geq 0$ is the probability that a statistically insignificant effect size is included, relative to the inclusion probability for an equally precise, statistically significant effect size.
+Note that if $\pi = 1$, then all studies appear with equal probability and there is no selective publication. 
 
 The weight function model and tests associated with it are usually based on maximum likelihood estimation models. 
 Assuming that studies are mutually independent, the joint likelihood of the weight function model is
@@ -132,14 +134,14 @@ Assuming that studies are mutually independent, the joint likelihood of the weig
 \end{equation}
 where $A_i$ is a normalizing constant given by 
 $$
-A_i(\mu, \tau^2, \pi) = 1 - (1 - \pi)\Phi\left( \frac{\sigma_i \Phi^{-1}(1 - \alpha) - \mu}{\sqrt{\tau^2 + \sigma_i^2}}\right) = P_i(\mu, \tau^2) + \pi \left[1 - P_i(\mu, \tau^2)\right],
+A_i(\mu, \tau^2, \pi) = 1 - (1 - \pi)\Phi\left( \frac{\sigma_i z_\alpha - \mu}{\sqrt{\tau^2 + \sigma_i^2}}\right) = P_i(\mu, \tau^2) + \pi \left[1 - P_i(\mu, \tau^2)\right],
 $$
 with $P_i(\mu, \tau^2)$ as given in (\ref{eq:power}). The log likelihood is thus (up to a constant):
 \begin{equation}
 l(\mu, \tau^2, \pi) = \sum_{i=1}^k \ln w(T_i, \sigma_i) - \frac{1}{2} \sum_{i=1}^k \frac{(T_i - \mu)^2}{\tau^2 + \sigma_i^2} - \frac{1}{2} \ln(\tau^2 + \sigma_i^2) - \sum_{i=1}^k \ln A_i(\mu, \tau^2, \pi).
 (\#eq:log-likelihood)
 \end{equation}
-Let $\hat\mu$, $\hat\tau^2$, and $\hat\pi$ denote the maximum likelihood estimates of the model parameters---that is, the values that maximize \@ref(eq:log-likelihood).
+Let $\hat\mu$, $\hat\tau^2$, and $\hat\pi$ denote the values that maximize \@ref(eq:log-likelihood)---that is, the maximum likelihood estimates of the model parameters.
 
 @hedges1992ModelingPublicationSelection proposed to a test for the null hypothesis that $\pi = 1$ (i.e., no selective publication) using a likelihood ratio criterion.
 Let $\hat\mu_R$ and $\hat\tau^2_R$ denote the values that maximize (\ref{eq:log-likelihood}) when $\pi$ is set equal to 1. The likelihood ratio test statistic is then 
@@ -150,7 +152,7 @@ G^2 = 2 \left[l(\hat\mu, \hat\tau^2, \hat\pi) - l(\hat\mu_R, \hat\tau_R^2, 1)\ri
 which is compared to a $\chi^2_1$ reference distribution.
 
 In practice, a difficulty with the three-parameter weight function model is that maximum likelihood estimates do not converge when all included studies are statistically significant or when no included studies are statistically significant at level $\alpha$.\todo{Are both of these conditions correct?}
-If one of these conditions occurs, a researcher might choose to adjust the $\alpha$ level defining statistical significance so that at least one study is statistically significant and one is statistically insignificant.
+If one of these conditions occurs, a researcher might choose to adjust the $\alpha$ level defining statistical significance so that at least one study is statistically significant and at least one is statistically insignificant.
 I implement this ad hoc modification when evaluating the operating characteristics of the likelihood ratio test in the Monte Carlo simulations.
 
 ## A general excess significance test
@@ -159,40 +161,73 @@ TES and the three-parameter weight function model are closely connected, in that
 The score function is the derivative of the log likelihood with respect to its parameters. 
 Note that the derivative of (\ref{eq:log-likelihood}) with respect to $\pi$ is
 \begin{equation}
-S_\pi(\mu, \tau^2, \pi) = \frac{\partial l}{\partial \pi} = \frac{1}{\pi} \sum_{i=1}^k (1 - S_i) - \sum_{i=1}^k \frac{1}{A_i} \Phi\left( \frac{\sigma_i \Phi^{-1}(1 - \alpha) - \mu}{\sqrt{\tau^2 + \sigma_i^2}}\right).
+S_\pi(\mu, \tau^2, \pi) = \frac{\partial l}{\partial \pi} = \frac{1}{\pi} \sum_{i=1}^k (1 - S_i) - \sum_{i=1}^k \frac{1}{A_i} \Phi\left( \frac{\sigma_i z_\alpha - \mu}{\sqrt{\tau^2 + \sigma_i^2}}\right).
 (\#eq:score-pi)
 \end{equation}
 Under the null hypothesis of $\pi = 1$, $A_i = 1$ for $i = 1,...,k$ and the score simplifies to 
 $$
 \begin{aligned}
-S_\pi(\mu, \tau^2, 1) &= \sum_{i=1}^k (1 - S_i) - \sum_{i=1}^k \Phi\left( \frac{\sigma_i \Phi^{-1}(1 - \alpha) - \mu}{\sqrt{\tau^2 + \sigma_i^2}}\right) \\
+S_\pi(\mu, \tau^2, 1) &= \sum_{i=1}^k (1 - S_i) - \sum_{i=1}^k \Phi\left( \frac{\sigma_i z_\alpha - \mu}{\sqrt{\tau^2 + \sigma_i^2}}\right) \\
 &= (k - O) - \sum_{i=1}^k \left[1 - P_i(\mu, \tau^2)\right] \\
 &= E(\mu,\tau^2) - O.
 \end{aligned}
 $$
-Thus, the score of the three-parameter weight function model, evaluated under the null, is equivalent to (negative 1 times) the discrepancy between the observed and expected number of significant effects that is used to construct TES. 
-TES is typically calculated under a fixed effects model, in which case the discrepancy is $O - \hat{E} = - S_\pi(\hat\mu_{FE}, 0, 1)$. If expected power is instead calculated using maximum likelihood estimates under a random effects model, then $O - E(\hat\mu_R, \hat\tau^2_R) = - S_\pi(\hat\mu_R, \hat\tau^2_R, 1)$.
+Thus, the score of the three-parameter weight function model, evaluated under the null, is equivalent to the discrepancy between the observed and expected number of significant effects that is used to construct TES. 
+TES is typically calculated under a fixed effects model, in which case the discrepancy is $O - \hat{E} = - S_\pi(\hat\mu_{FE}, 0, 1)$. If expected power is instead calculated using the maximum likelihood estimates under a random effects model, then $O - E(\hat\mu_R, \hat\tau^2_R) = - S_\pi(\hat\mu_R, \hat\tau^2_R, 1)$.
 
-This connection to the weight function model suggests that TES could be refined using score tests, a standard tool from mathematical statistics. Score tests [@rao1948LargeSampleTests] are asymptotically equivalent to likelihood ratio tests, but have the advantage that they do not require obtaining maximum likelihood estimates under the full (unrestricted) model [@boos1992GeneralizedScoreTests]. This is attractive in the present context because it circumvents potential convergence problems with the weight function model. Two forms of score tests are available, which use different approaches to estimating the variance of the null score. 
+This connection to the weight function model suggests that TES could be refined using score tests, a standard tool from mathematical statistics. Score tests [@rao1948LargeSampleTests] are asymptotically equivalent to likelihood ratio tests, but have the advantage that they do not require obtaining maximum likelihood estimates under the full (unrestricted) model [@boos1992GeneralizedScoreTests]. This feature is attractive in the present context because it allows one to circumvent potential convergence problems with the weight function model. Two forms of score tests are available---a parametric form and a robust form---which use different approaches to estimating the variance of the null score. 
 
-The score test as originally described by @rao1948LargeSampleTests uses the Fisher information matrix to estimate the variance of the score function. The test requires using the maximum likelihood estimates (under the restriction of the null hypothesis). An alternative form of score test provides more flexibility in how $\mu$ and $\theta$ may be estimated.
+The parametric score test [@rao1948LargeSampleTests] uses the Fisher information matrix to estimate the variance of the score function. Denote the full parameter vector of the weight function model as $\bs\theta = (\mu, \tau^2, \pi)$. Let $\bm{S}$ be the full score vector, so $\bm{S}(\bs\theta) = \partial l(\bs\theta) / \partial \bs\theta$. Let $\mathcal{I}$ denote the Fisher information matrix:
+$$
+\mathcal{I}(\bs\theta) = - \mathbb{E}\left(\frac{\partial^2 l(\bs\theta)}{\partial \bs\theta \partial \bs\theta'} \right),
+$$
+where $\mathbb{E}$ denotes the expectation over $T_1,...,T_k$. The parametric score test statistic is then given by 
+$$
+X^2_P = \bm{S}'(\hat\mu_R, \hat\tau^2_R, 1) \mathcal{I}(\hat\mu_R, \hat\tau^2_R, 1) \bm{S}(\hat\mu_R, \hat\tau^2_R, 1).
+$$
+This quantity can be expressed more directly as follows. Letting $\hat{P}_i^R = P_i(\hat\mu_R, \hat\tau^2_R)$,
+\begin{equation}
+X^2_P = \frac{\left[S_\pi(\hat\mu_R, \hat\tau^2_R, 1)\right]^2}{V_\pi - V_\mu - V_{\tau^2}},
+(\#eq:parametric-score)
+\end{equation}
+where
+$$
+\begin{aligned}
+V_\pi &= \sum_{i=1}^k \hat{P}^R_i \left(1 - \hat{P}^R_i\right), \\
+V_\mu &= \left[\sum_{i=1}^k \frac{1}{\hat\tau_R^2 + \sigma_i^2}\right]^{-1}\left[\sum_{i=1}^k \frac{\phi(c_i)}{\sqrt{\hat\tau^2_R + \sigma^2}}\right]^2, \\
+V_{\tau^2} &= \left[\sum_{i=1}^k \frac{1}{\left(\hat\tau_R^2 + \sigma_i^2\right)^2}\right]^{-1}\left[\sum_{i=1}^k \frac{c_i\phi(c_i)}{\hat\tau^2_R + \sigma^2}\right]^2,
+\end{aligned}
+$$
+and $c_i = \left(\sigma_i z_\alpha - \hat\mu_R\right) / \sqrt{\hat\tau^2_R + \sigma_i^2}$. 
+The null hypothesis of $\pi = 1$ is rejected if $X^2_P$ exceeds a $\chi^2_1$ critical value. 
+Alternately, a one-sided test can be calculated by taking 
+\begin{equation}
+Z_P = \frac{S_\pi(\hat\mu_R, \hat\tau^2_R, 1)}{\sqrt{V_\pi - V_\mu - V_{\tau^2}}}
+\end{equation}
+and rejecting if $Z_P < \Phi(\alpha_S)$ for a level-$\alpha_S$ test. 
 
-Generalized, or robust, forms of the score test have been described by Kent (1982), White (1982), and Engle (1984), among others [see @boos1992GeneralizedScoreTests for a review]. 
+This parametric score test requires using the maximum likelihood estimates (under the restriction of the null hypothesis). Alternative forms of the score test have been described by Kent (1982), White (1982), and Engle (1984), among others [see @boos1992GeneralizedScoreTests for a review]. 
+These generalized, or robust, forms provide more flexibility in how $\mu$ and $\theta$ may be estimated.
+
 
 # Size and power comparisons {#simulations}
 
 - TES (FE, chi-sq)
 - TES (FE, binom)
-- TES (RE, chi-sq)
-- TES (RE, binom)
 - TES (WLS, chi-sq)
 - TES (WLS, binom)
 - LRT (2-sided)
 - LRT (restricting to $\pi \leq 1$)
-- GEST (chi-sq)
-- GEST (beta-binom)
+- GEST (model-based)
+- GEST (robust, ML)
+- GEST (robust, WLS)
 
 # Discussion
+
+## Limitations
+
+- Independent effects
+- Simulations assume 3PSM. Further worked needed on other selection processes, models with precision-effect confounding, etc.
 
 \newpage
 
