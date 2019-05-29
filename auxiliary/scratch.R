@@ -11,23 +11,19 @@ score_test_types <- list(
   cross_df() %>%
   filter(type == "robust" | prior_mass == 0)
 
-LRT_types <- list(
-  two_sided = FALSE,
-  k_min = c(0L, 2L)
-) %>%
-  cross_df()
+LRT_types <- data_frame(two_sided = FALSE, k_min = 2L)
 
 n_sim <- n_beta(20, 120, 1, 3)
 
 system.time(
-  res <- runSim(reps = 10, studies = 80, mean_effect = 0, sd_effect = 0.1,
+  res <- runSim(reps = 1000, studies = 120, mean_effect = 0, sd_effect = 0,
                 n_sim = n_sim, 
-                p_thresholds = .025, p_RR = 0.9, 
+                p_thresholds = .025, p_RR = 0, 
                 score_test_types = score_test_types, 
                 LRT_types = LRT_types,
                 boot_n_sig = TRUE,
-                boot_qscore = TRUE,
-                seed = NULL)
+                boot_qscore = FALSE,
+                seed = 626490717)
 )
 
 res

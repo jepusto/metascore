@@ -1,9 +1,9 @@
-Package: metascoretest
+Package: metascore
 Version: 0.0.0.9000
-Title: What the Package Does (One Line, Title Case)
+Title: Model-Based and Robust Score Tests for Meta-Regression
 Description: What the package does (one paragraph).
-Authors@R: person("First", "Last", , "first.last@example.com", c("aut", "cre"))
-License: What license it uses
+Authors@R: person("James", "Pustejovsky", email = "jepusto@gmail.com", role = c("aut", "cre"), comment = c(ORCID = "0000-0003-0591-9465"))
+License: GPL-3
 Encoding: UTF-8
 LazyData: true
 Suggests: 
@@ -11,3 +11,4 @@ Suggests:
     rmarkdown,
     testthat
 VignetteBuilder: knitr
+RoxygenNote: 6.1.1
