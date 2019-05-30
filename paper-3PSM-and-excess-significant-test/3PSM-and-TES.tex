@@ -23,7 +23,7 @@
 }{}
 \usepackage{hyperref}
 \hypersetup{unicode=true,
-            pdftitle={On the connection between the Test of Excess Significance and weight-function models for selective publication},
+            pdftitle={Refining the Excess Significance Test for selective publication in meta-analysis},
             pdfauthor={James E. Pustejovsky},
             pdfkeywords={keywords},
             pdfborder={0 0 0},
@@ -63,7 +63,7 @@
 \def\footnote{\protect\rmarkdownfootnote}
 
 
-  \title{On the connection between the Test of Excess Significance and weight-function models for selective publication}
+  \title{Refining the Excess Significance Test for selective publication in meta-analysis}
     \author{James E. Pustejovsky\textsuperscript{1}}
     \date{}
   
@@ -107,7 +107,7 @@
 Correspondence concerning this article should be addressed to James E. Pustejovsky, 1912 Speedway, MS D5800, Austin, TX 78712. E-mail: \href{mailto:pusto@austin.utexas.edu}{\nolinkurl{pusto@austin.utexas.edu}}}
 
 \abstract{
-Publication bias and other forms of selective outcome reporting are important threats to the validity of findings from research syntheses---even undermining their special status for informing evidence-based practice and policy guidance. An array of methods have been proposed for detecting selective publication. In particular, Ioannidis and Trikalinos (2007) proposed the Test of Excess Significance (TES), which diagnoses publication bias by comparing the observed number of statistically significant effect sizes to the number expected based on the power of included studies to detect the estimated average effect. Another approach is based on explicit modeling of the selective publication process, as in the weight function model developed by Hedges (1992) and Vevea and Hedges (1995). Under the weight function model, a likelihood ratio test can be used to test for the presence of selective publication. This note demonstrates a connection between these two methods, namely, that TES is based on the score function of a simple form of the weight function model. This connection motivates a refinement to TES that improves its operating characteristics and allow for between-study heterogeneity through random effects and regression on study characteristics. After describing the refined test, I report a small simulation evaluating its calibration and power compared to conventional TES, a likelihood ratio test based on the weight function model, and p-uniform.
+Publication bias and other forms of selective outcome reporting are important threats to the validity of findings from research syntheses---even undermining their special status for informing evidence-based practice and policy guidance. An array of methods have been proposed for detecting selective publication. In particular, Ioannidis and Trikalinos (2007) proposed the Test of Excess Significance (TES), which diagnoses publication bias by comparing the observed number of statistically significant effect sizes to the number expected based on the power of included studies to detect the estimated average effect. Another approach is based on explicit modeling of the selective publication process, as in the weight function model developed by Hedges (1992) and Vevea and Hedges (1995). There is a close connection between these two methods: TES is based on the score function of a simple form of the weight function model. This connection motivates some refinements to TES that improve its operating characteristics and allow for between-study heterogeneity through random effects and regression on study characteristics. After describing the refined tests, I report a small simulation evaluating their calibration and power compared to conventional TES, a likelihood ratio test based on the weight function model, and p-uniform.
 
 
 }
@@ -218,10 +218,10 @@ In practice, a difficulty with the three-parameter weight function model is that
 If one of these conditions occurs, a researcher might choose to adjust the \(\alpha\) level defining statistical significance so that at least one study is statistically significant and at least one is statistically insignificant.
 I implement this ad hoc modification when evaluating the operating characteristics of the likelihood ratio test in the Monte Carlo simulations.
 
-\hypertarget{a-general-excess-significance-test}{%
-\subsection{A general excess significance test}\label{a-general-excess-significance-test}}
+\hypertarget{refined-excess-significance-tests}{%
+\subsection{Refined excess significance tests}\label{refined-excess-significance-tests}}
 
-TES and the three-parameter weight function model are closely connected, in that TES is an approximation to a score test under the weight function model.
+TES and the three-parameter weight function model are closely connected, in TES is based on the null score of the weight function model.
 The score function is the derivative of the log likelihood with respect to its parameters.
 Note that the derivative of (\ref{eq:log-likelihood}) with respect to \(\pi\) is
 \begin{equation}
@@ -236,42 +236,64 @@ S_\pi(\mu, \tau^2, 1) &= \sum_{i=1}^k (1 - S_i) - \sum_{i=1}^k \Phi\left( \frac{
 &= E(\mu,\tau^2) - O.
 \end{aligned}
 \]
-Thus, the score of the three-parameter weight function model, evaluated under the null, is equivalent to the discrepancy between the observed and expected number of significant effects that is used to construct TES.
+Thus, the score of the three-parameter weight function model, evaluated under the null, is equivalent to the discrepancy between the expected and observed number of significant effects---the same statistic that is used to construct TES.
 TES is typically calculated under a fixed effects model, in which case the discrepancy is \(O - \hat{E} = - S_\pi(\hat\mu_{FE}, 0, 1)\). If expected power is instead calculated using the maximum likelihood estimates under a random effects model, then \(O - E(\hat\mu_R, \hat\tau^2_R) = - S_\pi(\hat\mu_R, \hat\tau^2_R, 1)\).
 
-This connection to the weight function model suggests that TES could be refined using score tests, a standard tool from mathematical statistics. Score tests (Rao, 1948) are asymptotically equivalent to likelihood ratio tests, but have the advantage that they do not require obtaining maximum likelihood estimates under the full (unrestricted) model (Boos, 1992). This feature is attractive in the present context because it allows one to circumvent potential convergence problems with the weight function model. Two forms of score tests are available---a parametric form and a robust form---which use different approaches to estimating the variance of the null score.
+This connection to the weight function model suggests that TES could be refined using score tests, a standard tool from mathematical statistics. Score tests (Rao, 1948) are asymptotically equivalent to likelihood ratio tests, but have the advantage that they do not require obtaining maximum likelihood estimates under the unrestricted model (Boos, 1992). This feature is attractive in the present context because it allows one to circumvent potential convergence problems with the weight function model. Two forms of score tests are available---a parametric form and a robust form---which use different approaches to estimating the variance of the null score.
 
-The parametric score test (Rao, 1948) uses the Fisher information matrix to estimate the variance of the score function. Denote the full parameter vector of the weight function model as \(\boldsymbol\theta = (\mu, \tau^2, \pi)\). Let \(\bm{S}\) be the full score vector, so \(\bm{S}(\boldsymbol\theta) = \partial l(\boldsymbol\theta) / \partial \boldsymbol\theta\). Let \(\mathcal{I}\) denote the Fisher information matrix:
+The parametric score test (Rao, 1948) uses the Fisher information matrix to estimate the variance of the null score. Denote the full parameter vector of the weight function model as \(\boldsymbol\theta = (\mu, \tau^2, \pi)\). Let \(\bm{S}\) be the full score vector, so \(\bm{S}(\boldsymbol\theta) = \partial l(\boldsymbol\theta) / \partial \boldsymbol\theta\), with \(\bm{\tilde{S}}_R = \bm{S}(\hat\mu_R, \hat\tau^2_R, 1)\). Let \(\mathcal{I}\) denote the Fisher information matrix:
 \[
 \mathcal{I}(\boldsymbol\theta) = - \mathbb{E}\left(\frac{\partial^2 l(\boldsymbol\theta)}{\partial \boldsymbol\theta \partial \boldsymbol\theta'} \right),
 \]
-where \(\mathbb{E}\) denotes the expectation over \(T_1,...,T_k\). The parametric score test statistic is then given by
+where \(\mathbb{E}\) denotes the expectation over \(T_1,...,T_k\), and denote \(\tilde{\mathcal{I}}_R = \mathcal{I}(\hat\mu_R, \hat\tau^2_R, 1)\). The parametric score test statistic is then given by
 \[
-X^2_P = \bm{S}'(\hat\mu_R, \hat\tau^2_R, 1) \mathcal{I}(\hat\mu_R, \hat\tau^2_R, 1) \bm{S}(\hat\mu_R, \hat\tau^2_R, 1).
+X^2_P = \bm{\tilde{S}}'\tilde{\mathcal{I}}_R \bm{\tilde{S}}.
 \]
-This quantity can be expressed more directly as follows. Letting \(\hat{P}_i^R = P_i(\hat\mu_R, \hat\tau^2_R)\),
+This quantity can be expressed more directly as:
 \begin{equation}
-X^2_P = \frac{\left[S_\pi(\hat\mu_R, \hat\tau^2_R, 1)\right]^2}{V_\pi - V_\mu - V_{\tau^2}},
+X^2_P = \frac{\left[S_\pi(\hat\mu_R, \hat\tau^2_R, 1)\right]^2}{V_\pi - U_\mu - U_{\tau^2}},
 \label{eq:parametric-score}
 \end{equation}
 where
 \[
 \begin{aligned}
-V_\pi &= \sum_{i=1}^k \hat{P}^R_i \left(1 - \hat{P}^R_i\right), \\
-V_\mu &= \left[\sum_{i=1}^k \frac{1}{\hat\tau_R^2 + \sigma_i^2}\right]^{-1}\left[\sum_{i=1}^k \frac{\phi(c_i)}{\sqrt{\hat\tau^2_R + \sigma^2}}\right]^2, \\
-V_{\tau^2} &= \left[\sum_{i=1}^k \frac{1}{\left(\hat\tau_R^2 + \sigma_i^2\right)^2}\right]^{-1}\left[\sum_{i=1}^k \frac{c_i\phi(c_i)}{\hat\tau^2_R + \sigma^2}\right]^2,
+V_\pi &= \sum_{i=1}^k P_i(\hat\mu_R, \hat\tau^2_R) \left[1 - P_i(\hat\mu_R, \hat\tau^2_R)\right], \\
+U_\mu &= \left[\sum_{i=1}^k \frac{1}{\hat\tau_R^2 + \sigma_i^2}\right]^{-1}\left[\sum_{i=1}^k \frac{\phi(c_i)}{\sqrt{\hat\tau^2_R + \sigma^2}}\right]^2, \\
+U_{\tau^2} &= \left[\sum_{i=1}^k \frac{1}{\left(\hat\tau_R^2 + \sigma_i^2\right)^2}\right]^{-1}\left[\sum_{i=1}^k \frac{c_i\phi(c_i)}{\hat\tau^2_R + \sigma^2}\right]^2,
 \end{aligned}
 \]
 and \(c_i = \left(\sigma_i z_\alpha - \hat\mu_R\right) / \sqrt{\hat\tau^2_R + \sigma_i^2}\).
 The null hypothesis of \(\pi = 1\) is rejected if \(X^2_P\) exceeds a \(\chi^2_1\) critical value.
-Alternately, a one-sided test can be calculated by taking
+Alternately, a one-sided, level-\(\alpha_S\) test can be calculated by taking
 \begin{equation}
-Z_P = \frac{S_\pi(\hat\mu_R, \hat\tau^2_R, 1)}{\sqrt{V_\pi - V_\mu - V_{\tau^2}}}
+Z_P = \frac{S_\pi(\hat\mu_R, \hat\tau^2_R, 1)}{\sqrt{V_\pi - U_\mu - U_{\tau^2}}}
 \end{equation}
-and rejecting if \(Z_P < \Phi(\alpha_S)\) for a level-\(\alpha_S\) test.
+and rejecting if \(Z_P < \Phi(\alpha_S)\).
 
 This parametric score test requires using the maximum likelihood estimates (under the restriction of the null hypothesis). Alternative forms of the score test have been described by Kent (1982), White (1982), and Engle (1984), among others (see Boos, 1992 for a review).
-These generalized, or robust, forms provide more flexibility in how \(\mu\) and \(\theta\) may be estimated.
+These generalized, or robust, forms provide more flexibility in how \(\mu\) and \(\theta\) may be estimated, assuming that there is not selective publication.
+Generally, consider estimators \(\dot\mu\) and \(\dot\tau^2\) that are defined as the solutions of estimating equations
+\[
+\begin{aligned}
+S^\mu\left(\mu, \tau^2\right) &= \sum_{i=1}^k S^\mu_i \left(T_i, \sigma_i, \mu, \tau^2\right) = 0, \qquad \text{and} \\
+S^{\tau^2}\left(\mu, \tau^2\right) &= \sum_{i=1}^k S^{\tau^2}_i \left(T_i, \sigma_i, \mu, \tau^2\right) = 0.
+\end{aligned}
+\]
+The estimating equation for \(\mu\) will typically take the form
+\[
+S^\mu(\mu, \tau^2) = \frac{1}{W}\sum_{i=1}^k w_i (T_i - \mu)
+\]
+for some set of weights \(w_1,...,w_k\) with \(W = \sum_{i=1}^k w_i\).
+The fixed effect estimator uses \(w_i = \sigma_i^{-2}\); the random effects estimator uses \(w_i = 1 / \left(\tau^2 + \sigma_i^2\right)\).
+For the between-study heterogeneity, many of the available estimators of \(\tau^2\) can be expressed as solutions to estimating equations.
+For example, the maximum likelihood estimator uses
+\[
+S^{\tau^2}(\mu,\tau^2) = \frac{1}{2}\sum_{i=1}^k \frac{(T_i - \mu)^2}{\left(\tau^2 + \sigma_i^2\right)^2} - \frac{1}{2}\sum_{i=1}^k \frac{1}{\tau^2 + \sigma_i^2}.
+\]
+and the restricted maximum likelihood estimator uses
+\[
+S^{\tau^2}(\mu,\tau^2) = \frac{1}{2}\sum_{i=1}^k \frac{(T_i - \mu)^2}{\left(\tau^2 + \sigma_i^2\right)^2} + \frac{1}{2 \sum_{i=1}^k (\tau^2 + \sigma_i^2)^{-1}} \sum_{i=1}^k \frac{1}{\left(\tau^2 + \sigma_i^2\right)^2} - \frac{1}{2}\sum_{i=1}^k \frac{1}{\tau^2 + \sigma_i^2}.
+\]
 
 \hypertarget{simulations}{%
 \section{Size and power comparisons}\label{simulations}}
