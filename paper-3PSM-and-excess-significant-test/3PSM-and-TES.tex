@@ -23,7 +23,7 @@
 }{}
 \usepackage{hyperref}
 \hypersetup{unicode=true,
-            pdftitle={Refining the Excess Significance Test for selective publication in meta-analysis},
+            pdftitle={Refining the Test of Excess Significance for detecting selective publication in meta-analysis},
             pdfauthor={James E. Pustejovsky},
             pdfkeywords={keywords},
             pdfborder={0 0 0},
@@ -63,11 +63,11 @@
 \def\footnote{\protect\rmarkdownfootnote}
 
 
-  \title{Refining the Excess Significance Test for selective publication in meta-analysis}
+  \title{Refining the Test of Excess Significance for detecting selective publication in meta-analysis}
     \author{James E. Pustejovsky\textsuperscript{1}}
     \date{}
   
-\shorttitle{TES and Vevea-Hedges Selection Models}
+\shorttitle{REFINING TES}
 \affiliation{
 \vspace{0.5cm}
 \textsuperscript{1} University of Texas at Austin}
@@ -136,13 +136,13 @@ Under a random effects model, and in the absence of selective publication, the t
 Let \(\alpha\) denote the conventional type-I error level used for one-sided hypothesis tests; in areas of research that typically use two-sided tests and the .05 level to determine significance, the one-sided level would be \(\alpha = .025\).
 Let \(\Phi(x)\) and \(\phi(x)\) denote the standard normal cumulative distribution and density function, respectively.
 Let \(z_\alpha\) denote the standard normal \(\alpha\)-level critical value, that is, \(z_\alpha = \Phi^{-1}(1 - \alpha)\).
-Let \(S_i\) be an indicator for the statistical significance of study \(i\), so that \(S_i = 1\) when \(T_i / \sigma_i > \Phi^{-1}(1 - \alpha)\) and \(S_i = 0\) otherwise.
+Let \(O_i\) be an indicator for the statistical significance of study \(i\), so that \(O_i = 1\) when \(T_i / \sigma_i > \Phi^{-1}(1 - \alpha)\) and \(O_i = 0\) otherwise.
 
 \hypertarget{test-of-excess-significance}{%
 \subsection{Test of Excess Significance}\label{test-of-excess-significance}}
 
 As a test of selective publication, Ioannidis and Trikalinos (2007) proposed to compare the number of statistically significant effects among the set of \(k\) studies to the number of significant effects expected if there were no selection.
-The observed number of significant effects is \(O = \sum_{i=1}^K S_i\).
+The observed number of significant effects is \(O = \sum_{i=1}^K O_i\).
 In the absence of selection, the expected number of effects is the sum of the power of each study to detect a true effect of a given size.
 Letting \(P_i(\mu,\tau^2)\) denote the power of study \(i\) under a random effects model, which is equal to
 \begin{equation} 
@@ -150,7 +150,7 @@ P_i(\mu,\tau^2) = 1 - \Phi\left( \frac{\sigma_i z_\alpha - \mu}{\sqrt{\tau^2 + \
 \label{eq:power}
 \end{equation}
 The expected number of significant effects is then \(E(\mu, \tau^2) = \sum_{i=1}^k P_i(\mu, \tau^2)\), a quantity that depends on the unknown average effect \(\mu\) and between-study heterogeneity \(\tau\).
-Ioannidis and Trikalinos (2007) suggested estimating expected power based on a fixed effect meta-analysis, taking \(\hat{E} = E(\hat\mu^{FE}, 0)\), where \(\hat\mu^{FE}\) is the usual fixed effect average.
+Ioannidis and Trikalinos (2007) suggested estimating expected power based on a fixed effect meta-analysis, taking \(\hat{E} = E(\hat\mu_F, 0)\), where \(\hat\mu_F\) is the usual fixed effect average.
 They justify this approach by arguing that heterogeneity is often negligible and that, if there is selective publication, the fixed effect average is less biased than the random effects average.
 Subsequent applications of TES have typically followed this approach.\todo{Is this true?}
 
@@ -225,21 +225,21 @@ TES and the three-parameter weight function model are closely connected, in TES 
 The score function is the derivative of the log likelihood with respect to its parameters.
 Note that the derivative of (\ref{eq:log-likelihood}) with respect to \(\pi\) is
 \begin{equation}
-S_\pi(\mu, \tau^2, \pi) = \frac{\partial l}{\partial \pi} = \frac{1}{\pi} \sum_{i=1}^k (1 - S_i) - \sum_{i=1}^k \frac{1}{A_i} \Phi\left( \frac{\sigma_i z_\alpha - \mu}{\sqrt{\tau^2 + \sigma_i^2}}\right).
+S^\pi(\mu, \tau^2, \pi) = \frac{\partial l}{\partial \pi} = \frac{1}{\pi} \sum_{i=1}^k (1 - S_i) - \sum_{i=1}^k \frac{1}{A_i} \Phi\left( \frac{\sigma_i z_\alpha - \mu}{\sqrt{\tau^2 + \sigma_i^2}}\right).
 \label{eq:score-pi}
 \end{equation}
 Under the null hypothesis of \(\pi = 1\), \(A_i = 1\) for \(i = 1,...,k\) and the score simplifies to
 \[
 \begin{aligned}
-S_\pi(\mu, \tau^2, 1) &= \sum_{i=1}^k (1 - S_i) - \sum_{i=1}^k \Phi\left( \frac{\sigma_i z_\alpha - \mu}{\sqrt{\tau^2 + \sigma_i^2}}\right) \\
+S^\pi(\mu, \tau^2, 1) &= \sum_{i=1}^k (1 - O_i) - \sum_{i=1}^k \Phi\left( \frac{\sigma_i z_\alpha - \mu}{\sqrt{\tau^2 + \sigma_i^2}}\right) \\
 &= (k - O) - \sum_{i=1}^k \left[1 - P_i(\mu, \tau^2)\right] \\
 &= E(\mu,\tau^2) - O.
 \end{aligned}
 \]
 Thus, the score of the three-parameter weight function model, evaluated under the null, is equivalent to the discrepancy between the expected and observed number of significant effects---the same statistic that is used to construct TES.
-TES is typically calculated under a fixed effects model, in which case the discrepancy is \(O - \hat{E} = - S_\pi(\hat\mu_{FE}, 0, 1)\). If expected power is instead calculated using the maximum likelihood estimates under a random effects model, then \(O - E(\hat\mu_R, \hat\tau^2_R) = - S_\pi(\hat\mu_R, \hat\tau^2_R, 1)\).
+TES is typically calculated under a fixed effects model, in which case the discrepancy is \(O - \hat{E} = - S^\pi(\hat\mu_{FE}, 0, 1)\). If expected power is instead calculated using the maximum likelihood estimates under a random effects model, then \(O - E(\hat\mu_R, \hat\tau^2_R) = - S^\pi(\hat\mu_R, \hat\tau^2_R, 1)\).
 
-This connection to the weight function model suggests that TES could be refined using score tests, a standard tool from mathematical statistics. Score tests (Rao, 1948) are asymptotically equivalent to likelihood ratio tests, but have the advantage that they do not require obtaining maximum likelihood estimates under the unrestricted model (Boos, 1992). This feature is attractive in the present context because it allows one to circumvent potential convergence problems with the weight function model. Two forms of score tests are available---a parametric form and a robust form---which use different approaches to estimating the variance of the null score.
+This connection to the weight function model suggests that TES could be refined using score tests, a standard tool from mathematical statistics. Score tests (Rao, 1948) are asymptotically equivalent to likelihood ratio tests, but have the advantage that they do not require obtaining maximum likelihood estimates under the unrestricted model (Boos, 1992). This feature is advantageous in the present context because it allows one to circumvent potential convergence problems with the weight function model. Two forms of score tests are available---a parametric form and a robust form---which use different approaches to estimating the variance of the null score.
 
 The parametric score test (Rao, 1948) uses the Fisher information matrix to estimate the variance of the null score. Denote the full parameter vector of the weight function model as \(\boldsymbol\theta = (\mu, \tau^2, \pi)\). Let \(\bm{S}\) be the full score vector, so \(\bm{S}(\boldsymbol\theta) = \partial l(\boldsymbol\theta) / \partial \boldsymbol\theta\), with \(\bm{\tilde{S}}_R = \bm{S}(\hat\mu_R, \hat\tau^2_R, 1)\). Let \(\mathcal{I}\) denote the Fisher information matrix:
 \[
@@ -247,11 +247,11 @@ The parametric score test (Rao, 1948) uses the Fisher information matrix to esti
 \]
 where \(\mathbb{E}\) denotes the expectation over \(T_1,...,T_k\), and denote \(\tilde{\mathcal{I}}_R = \mathcal{I}(\hat\mu_R, \hat\tau^2_R, 1)\). The parametric score test statistic is then given by
 \[
-X^2_P = \bm{\tilde{S}}'\tilde{\mathcal{I}}_R \bm{\tilde{S}}.
+X^2_P = \bm{\tilde{S}}_R'\tilde{\mathcal{I}}_R \bm{\tilde{S}}_R.
 \]
 This quantity can be expressed more directly as:
 \begin{equation}
-X^2_P = \frac{\left[S_\pi(\hat\mu_R, \hat\tau^2_R, 1)\right]^2}{V_\pi - U_\mu - U_{\tau^2}},
+X^2_P = \frac{\left[E(\hat\mu_R, \hat\tau^2_R) - O\right]^2}{V_\pi - U_\mu - U_{\tau^2}},
 \label{eq:parametric-score}
 \end{equation}
 where
@@ -266,37 +266,63 @@ and \(c_i = \left(\sigma_i z_\alpha - \hat\mu_R\right) / \sqrt{\hat\tau^2_R + \s
 The null hypothesis of \(\pi = 1\) is rejected if \(X^2_P\) exceeds a \(\chi^2_1\) critical value.
 Alternately, a one-sided, level-\(\alpha_S\) test can be calculated by taking
 \begin{equation}
-Z_P = \frac{S_\pi(\hat\mu_R, \hat\tau^2_R, 1)}{\sqrt{V_\pi - U_\mu - U_{\tau^2}}}
+Z_P = \frac{E(\hat\mu_R, \hat\tau^2_R) - O}{\sqrt{V_\pi - U_\mu - U_{\tau^2}}}
 \end{equation}
 and rejecting if \(Z_P < \Phi(\alpha_S)\).
 
 This parametric score test requires using the maximum likelihood estimates (under the restriction of the null hypothesis). Alternative forms of the score test have been described by Kent (1982), White (1982), and Engle (1984), among others (see Boos, 1992 for a review).
 These generalized, or robust, forms provide more flexibility in how \(\mu\) and \(\theta\) may be estimated, assuming that there is not selective publication.
-Generally, consider estimators \(\dot\mu\) and \(\dot\tau^2\) that are defined as the solutions of estimating equations
+
+Consider estimators \(\acute\mu\) and \(\acute\tau^2\) that are defined as the solutions of estimating equations
 \[
 \begin{aligned}
-S^\mu\left(\mu, \tau^2\right) &= \sum_{i=1}^k S^\mu_i \left(T_i, \sigma_i, \mu, \tau^2\right) = 0, \qquad \text{and} \\
-S^{\tau^2}\left(\mu, \tau^2\right) &= \sum_{i=1}^k S^{\tau^2}_i \left(T_i, \sigma_i, \mu, \tau^2\right) = 0.
+S^\mu\left(\mu, \tau^2\right) &= \sum_{i=1}^k S^\mu_i \left(\mu, \tau^2\right) = 0, \\
+S^{\tau^2}\left(\mu, \tau^2\right) &= \sum_{i=1}^k S^{\tau^2}_i \left(\mu, \tau^2\right) = 0,
 \end{aligned}
 \]
-The estimating equation for \(\mu\) will typically take the form
+where the estimating equation for \(\mu\) has the form
 \[
-S^\mu(\mu, \tau^2) = \frac{1}{W}\sum_{i=1}^k w_i (T_i - \mu)
+S_i^\mu(\mu, \tau^2) = w_i (T_i - \mu)
 \]
-for some set of weights \(w_1,...,w_k\) with \(W = \sum_{i=1}^k w_i\).
-The fixed effect estimator uses \(w_i = \sigma_i^{-2}\); the random effects estimator uses \(w_i = 1 / \left(\tau^2 + \sigma_i^2\right)\).
+for some set of weights \(w_1,...,w_k\), which may depend on \(\tau^2\).
+The usual fixed effect estimator uses \(w_i = \sigma_i^{-2}\); the random effects estimator uses \(w_i = \left(\tau^2 + \sigma_i^2\right)^{-1}\).
 For the between-study heterogeneity, many of the available estimators of \(\tau^2\) can be expressed as solutions to estimating equations.
 For example, the maximum likelihood estimator uses
 \[
-S^{\tau^2}(\mu,\tau^2) = \frac{1}{2}\sum_{i=1}^k \frac{(T_i - \mu)^2}{\left(\tau^2 + \sigma_i^2\right)^2} - \frac{1}{2}\sum_{i=1}^k \frac{1}{\tau^2 + \sigma_i^2}.
+S_i^{\tau^2}(\mu,\tau^2) = \frac{1}{\tau^2 + \sigma_i^2} \left[\frac{(T_i - \mu)^2}{\tau^2 + \sigma_i^2} - 1\right].
 \]
 and the restricted maximum likelihood estimator uses
 \[
-S^{\tau^2}(\mu,\tau^2) = \frac{1}{2}\sum_{i=1}^k \frac{(T_i - \mu)^2}{\left(\tau^2 + \sigma_i^2\right)^2} + \frac{1}{2 \sum_{i=1}^k (\tau^2 + \sigma_i^2)^{-1}} \sum_{i=1}^k \frac{1}{\left(\tau^2 + \sigma_i^2\right)^2} - \frac{1}{2}\sum_{i=1}^k \frac{1}{\tau^2 + \sigma_i^2}.
+S_i^{\tau^2}(\mu,\tau^2) = \frac{1}{\tau^2 + \sigma_i^2} \left[\frac{(T_i - \mu)^2}{\tau^2 + \sigma_i^2} + \frac{1}{\left(\tau^2 + \sigma_i^2\right)\sum_{i=1}^k \left(\tau^2 + \sigma_i^2\right)^{-1}}- 1\right].
 \]
+
+In conjunction with estimating equations for \(\mu\) and \(\tau^2\), a robust score test can be defined based on the null score function from the three-parameter weight function model:
+\[
+S^\pi\left(\mu, \tau^2\right) = E(\mu, \tau^2) - O = \sum_{i=1}^k S^\pi_i\left(\mu, \tau^2\right)
+\]
+where \(S^\pi_i\left(\mu, \tau^2\right) = P_i(\mu, \tau^2) - O_i\). Let \(\mathcal{I}^\mu_\mu(\mu, \tau^2) = -\mathbb{E}\left(\partial S^\mu / \partial \mu\right)\), \(\mathcal{I}^\pi_\mu(\mu, \tau^2) = -\mathbb{E}\left(\partial S^\pi / \partial \mu\right)\), etc., where all expectations are taken under the null with \(\pi = 1\). Let \(F_i\) denote the efficient score function (Tsiatis, 2006), given by
+\[
+F_i = S^\pi_i - \left(\frac{\mathcal{I}^\pi_\mu}{\mathcal{I}^\mu_\mu}\right) S^\mu_i - \left(\frac{\mathcal{I}^\pi_\mu}{\mathcal{I}^\mu_\mu}\right) S^\mu_i,
+\]
+with all quantities evaluated at the parameter estimates \(\acute\mu\) and \(\acute\tau^2\). A robust score test statistic is then
+\begin{equation}
+X^2_R = \frac{\left[E(\acute\mu, \acute\tau^2) - O\right]^2}{\sum_{i=1}^k F_i^2},
+\label{eq:robust-score}
+\end{equation}
+compared to a \(\chi^2_1\) reference distribution. Alternately, a one-sided test can be obtained by taking
+\begin{equation}
+Z_R = \frac{E(\acute\mu, \acute\tau^2) - O}{\sqrt{\sum_{i=1}^k F_i^2}}
+\end{equation}
+and rejecting if \(Z_R < \Phi(\alpha_S)\).
+
+The robust form of the score test is attractive because it can be applied with any of an array of estimators for \(\mu\) and \(\tau^2\).
+For instance, an analyst might prefer to use the fixed effect estimator \(\hat\mu_F\) for the average effect size because it is less biased than the random effects estimator under selective publication (cf.~Henmi \& Copas, 2010; Stanley \& Doucouliagos, 2015), along with the restricted maximum likelihood estimator for \(\tau^2\) because it is less biased than the maximum likelihood estimator.
+To determine whether this approach offers any advantage over the use of maximum likelihood estimators, and whether either the parametric or robust test offers advantages over the existing TES or the likelihood ratio test from the three-parameter weight function model, I turn to Monte Carlo simulations.
 
 \hypertarget{simulations}{%
 \section{Size and power comparisons}\label{simulations}}
+
+In this section, I report simulations examining the size (Type-I error rates) and power properties of these tests under the random effects models and a basic form of selective publication---consistent
 
 \begin{itemize}
 \tightlist
@@ -356,6 +382,9 @@ Dear, K. B. G., \& Begg, C. B. (1992). An Approach for Assessing Publication Bia
 \leavevmode\hypertarget{ref-hedges1992ModelingPublicationSelection}{}%
 Hedges, L. V. (1992). Modeling Publication Selection Effects in Meta-Analysis. \emph{Statistical Science}, \emph{7}(2), 246--255. doi:\href{https://doi.org/10.1214/ss/1177011364}{10.1214/ss/1177011364}
 
+\leavevmode\hypertarget{ref-henmi2010ConfidenceIntervalsRandom}{}%
+Henmi, M., \& Copas, J. B. (2010). Confidence intervals for random effects meta-analysis and robustness to publication bias. \emph{Statistics in Medicine}, \emph{29}(29), 2969--2983. doi:\href{https://doi.org/10.1002/sim.4029}{10.1002/sim.4029}
+
 \leavevmode\hypertarget{ref-ioannidis2013ClarificationsApplicationInterpretation}{}%
 Ioannidis, J. P. A. (2013). Clarifications on the application and interpretation of the test for excess significance and its extensions. \emph{Journal of Mathematical Psychology}, \emph{57}(5), 184--187. doi:\href{https://doi.org/10.1016/j.jmp.2013.03.002}{10.1016/j.jmp.2013.03.002}
 
@@ -376,6 +405,12 @@ Morey, R. D. (2013). The consistency test does notand cannotDeliver what is adve
 
 \leavevmode\hypertarget{ref-rao1948LargeSampleTests}{}%
 Rao, C. R. (1948). Large sample tests of statistical hypotheses concerning several parameters with applications to problems of estimation. \emph{Mathematical Proceedings of the Cambridge Philosophical Society}, \emph{44}(01), 50. doi:\href{https://doi.org/10.1017/S0305004100023987}{10.1017/S0305004100023987}
+
+\leavevmode\hypertarget{ref-stanley2015NeitherFixedRandom}{}%
+Stanley, T. D., \& Doucouliagos, H. (2015). Neither fixed nor random: Weighted least squares meta-analysis. \emph{Statistics in Medicine}, \emph{34}(13), 2116--2127. doi:\href{https://doi.org/10.1002/sim.6481}{10.1002/sim.6481}
+
+\leavevmode\hypertarget{ref-tsiatis2006GeometryInfluenceFunctions}{}%
+Tsiatis, A. A. (2006). The Geometry of Influence Functions. In \emph{Semiparametric Theory and Missing Data} (pp. 21--51). New York, NY: Springer New York. doi:\href{https://doi.org/10.1007/0-387-37345-4_3}{10.1007/0-387-37345-4\_3}
 
 \leavevmode\hypertarget{ref-vanassen2015MetaanalysisUsingEffect}{}%
 van Assen, M. A. L. M., van Aert, R. C. M., \& Wicherts, J. M. (2015). Meta-analysis using effect size distributions of only statistically significant studies. \emph{Psychological Methods}, \emph{20}(3), 293--309. doi:\href{https://doi.org/10.1037/met0000025}{10.1037/met0000025}
