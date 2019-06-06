@@ -51,7 +51,7 @@ r_SMD <- function(studies, mean_effect, sd_effect,
     dat <- rbind(dat, new_dat)
   }
   
-  # calculate standardized mean difference estimates (Hedges' g's) and transformed d's
+  # calculate standardized mean difference estimates (Hedges' g's)
   
   J_i <- with(dat, 1 - 3 / (8 * n - 9))
   
@@ -66,19 +66,125 @@ r_SMD <- function(studies, mean_effect, sd_effect,
     
     Va <- 2 / n
     sda <- sqrt(Va)
-    
-    Top <- (1:studies) %in% (order(n, decreasing = TRUE)[1:10])
   })
   
   return(dat)
 }
+
+#----------------------------------------------------------------
+# Score tests for basic meta-analysis model with no covariates
+#----------------------------------------------------------------
+
+simple_scores <- function(mod, type = c("TES-norm","TES-binom","parametric","robust"), alpha = .025) {
+  
+  # pull required quantities from model
+  k <- mod$k
+  y_i <- as.numeric(mod$yi)
+  e_i <- residuals(mod)
+  v_i <- mod$vi
+  s_i <- sqrt(v_i)
+  mu <- as.numeric(mod$beta)
+  tau_sq <- mod$tau2
+  inv_var_i <- 1 / (v_i + tau_sq)
+  w_i <- if (!is.null(mod$weights)) mod$weights else inv_var_i
+  
+  # calculate power per study  
+  z_alpha <- qnorm(1 - alpha)
+  c_i <- (s_i * z_alpha - mu) * sqrt(inv_var_i)
+  Pwr_i <- pnorm(c_i, lower.tail = FALSE)
+  
+  # significance indicator
+  O_i <- y_i / s_i > z_alpha
+  
+  Observed <- sum(O_i)
+  Expected <- sum(Pwr_i)
+  Score_pi <- Expected - Observed
+  
+  res <- data.frame()
+  
+  # calculate TES
+  
+  if (any(c("TES-norm","TES-binom") %in% type)) {
+    Z_TES <- Score_pi / sqrt(Expected * (k - Expected) / k)
+    
+    if ("TES-norm" %in% type) {
+      res_TES <- data.frame(
+        type = "TES-norm",
+        Z = Z_TES,
+        p = pnorm(Z_TES)
+      )
+      res <- rbind(res, res_TES)    
+    }
+    
+    if ("TES-binom" %in% type) {
+      res_TES <- data.frame(
+        type = "TES-binom",
+        Z = Z_TES,
+        p = pbinom(k - Observed, size = k, prob = 1 - Expected / k)
+      )
+      res <- rbind(res, res_TES)
+    }
+  }
+  
+  if (any(c("parametric","robust") %in% type)) {
+    
+    FI_beta <- sum(w_i) # same as 1 / mod$se^2
+    
+    # NOTE: needs to be something else if method != "ML"
+    FI_tausq <- sum(inv_var_i^2) / 2 # same as 1 / mod$se.tausq^2
+    
+    FI_pi <- sum(Pwr_i * (1 - Pwr_i))
+    
+    dnorm_c_i <- dnorm(c_i)
+    FI_pi_beta <- sum(dnorm_c_i * sqrt(inv_var_i))
+    FI_pi_tausq <- sum(c_i * dnorm_c_i * inv_var_i)
+    
+    if ("parametric" %in% type) {
+      V_parametric <- FI_pi - FI_pi_beta^2 / FI_beta - FI_pi_tausq^2 / FI_tausq
+      Z_parametric = Score_pi / sqrt(V_parametric)
+      
+      res_parametric <- data.frame(
+        type = "parametric",
+        Z = Z_parametric,
+        p = pnorm(Z_parametric)
+      )
+      res <- rbind(res, res_parametric)
+    }
+    
+    if ("robust" %in% type) {
+      
+      S_mu_i <- w_i * e_i
+      S_tausq_i <- if (mod$method == "ML") {
+        inv_var_i * (e_i^2 * inv_var_i - 1)
+      } else if (mod$method == "REML") { 
+        inv_var_i * (e_i^2 * inv_var_i - 1 + inv_var_i / sum(inv_var_i))
+      } else {
+        0
+      }
+      F_i <- Pwr_i - O_i - S_mu_i * FI_pi_beta / FI_beta - S_tausq_i * FI_pi_tausq / FI_tausq
+      
+      V_robust <- sum(F_i^2)
+      Z_robust = Score_pi / sqrt(V_robust)
+      
+      res_robust <- data.frame(
+        type = "robust",
+        Z = Z_robust,
+        p = pnorm(Z_robust)
+      )
+      
+      res <- rbind(res, res_robust)
+    }
+  }
+  
+  res
+} 
 
 
 #----------------------------------------
 # Run all of the methods
 #----------------------------------------
 
-fit_meta_ML <- function(dat, max_iter = 100L, step_adj = 1L, tau2_min = NULL) {
+fit_meta <- function(dat, method = "REML", weights = NULL, max_iter = 100L, step_adj = 1L, tau2_min = NULL) {
   
   suppressPackageStartupMessages(
     require(metafor, quietly = TRUE, warn.conflicts = FALSE)
@@ -88,7 +194,8 @@ fit_meta_ML <- function(dat, max_iter = 100L, step_adj = 1L, tau2_min = NULL) {
   
   if (is.null(tau2_min)) tau2_min <- -min(dat$Va)
   
-  dat <- enexpr(dat)
+  method <- enexpr(method)
+  weights <- enexpr(weights)
   
   rma_fit <- NULL
   fits <- 0L
@@ -97,11 +204,15 @@ fit_meta_ML <- function(dat, max_iter = 100L, step_adj = 1L, tau2_min = NULL) {
     
     control_list <- list(maxiter = max_iter, stepadj = step_adj, tau2.min = tau2_min)
     
-    rma_call <- expr(rma(yi = g, vi = Va, data = !!dat, method = "ML", control = !!control_list))
+    rma_call <- 
+      if (is.null(weights)) {
+        expr(rma(yi = g, vi = Va, data = dat, method = !!method, control = !!control_list))  
+      } else {
+        expr(rma(yi = g, vi = Va, weights = !!weights, data = dat, method = !!method, control = !!control_list))
+      }
     
     rma_fit <- suppressWarnings(
-      tryCatch(eval_bare(rma_call, caller_env()),
-        error = function(e) NULL)
+      tryCatch(eval_bare(rma_call, caller_env()), error = function(e) NULL)
     )
     
     fits <- fits + 1L
@@ -111,39 +222,11 @@ fit_meta_ML <- function(dat, max_iter = 100L, step_adj = 1L, tau2_min = NULL) {
   rma_fit
 }
 
-fit_meta_FE_REML <- function(dat, max_iter = 100L, step_adj = 1L, tau2_min = NULL) {
+test_for_selection <- function(dat, alpha = .025, 
+                               score_types = c("TES-norm","TES-binom","parametric","robust"),
+                               LRT = TRUE) {
   
-  suppressPackageStartupMessages(
-    require(metafor, quietly = TRUE, warn.conflicts = FALSE)
-  )
-
-  require(rlang, quietly = TRUE, warn.conflicts = FALSE)
-  
-  if (is.null(tau2_min)) tau2_min <- -min(dat$Va)
-  
-  dat <- enexpr(dat)
-  
-  rma_fit <- NULL
-  fits <- 0L
-  
-  while (is.null(rma_fit) & fits <= 5) {
-
-    control_list <- list(maxiter = max_iter, stepadj = step_adj, tau2.min = tau2_min)
-    
-    rma_call <- expr(rma(yi = g, vi = Va, weights = 1 / Va, data = !!dat, method = "REML", 
-                         control = !!control_list))
-    
-    rma_fit <- suppressWarnings(
-      tryCatch(eval_bare(rma_call, caller_env()),
-               error = function(e) NULL)
-    )
-    
-    fits <- fits + 1L
-    step_adj <- step_adj / 2L
-  }
-  
-  rma_fit
-}
+} 
 
 estimate_effects <- function(dat, 
                              test_steps = .025, 

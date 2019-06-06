@@ -136,7 +136,7 @@ Under a random effects model, and in the absence of selective publication, the t
 Let \(\alpha\) denote the conventional type-I error level used for one-sided hypothesis tests; in areas of research that typically use two-sided tests and the .05 level to determine significance, the one-sided level would be \(\alpha = .025\).
 Let \(\Phi(x)\) and \(\phi(x)\) denote the standard normal cumulative distribution and density function, respectively.
 Let \(z_\alpha\) denote the standard normal \(\alpha\)-level critical value, that is, \(z_\alpha = \Phi^{-1}(1 - \alpha)\).
-Let \(O_i\) be an indicator for the statistical significance of study \(i\), so that \(O_i = 1\) when \(T_i / \sigma_i > \Phi^{-1}(1 - \alpha)\) and \(O_i = 0\) otherwise.
+Let \(O_i\) be an indicator for the statistical significance of study \(i\), so that \(O_i = 1\) when \(T_i / \sigma_i > z_\alpha\) and \(O_i = 0\) otherwise.
 
 \hypertarget{test-of-excess-significance}{%
 \subsection{Test of Excess Significance}\label{test-of-excess-significance}}
@@ -316,8 +316,10 @@ Z_R = \frac{E(\acute\mu, \acute\tau^2) - O}{\sqrt{\sum_{i=1}^k F_i^2}}
 and rejecting if \(Z_R < \Phi(\alpha_S)\).
 
 The robust form of the score test is attractive because it can be applied with any of an array of estimators for \(\mu\) and \(\tau^2\).
-For instance, an analyst might prefer to use the fixed effect estimator \(\hat\mu_F\) for the average effect size because it is less biased than the random effects estimator under selective publication (cf.~Henmi \& Copas, 2010; Stanley \& Doucouliagos, 2015), along with the restricted maximum likelihood estimator for \(\tau^2\) because it is less biased than the maximum likelihood estimator.
-To determine whether this approach offers any advantage over the use of maximum likelihood estimators, and whether either the parametric or robust test offers advantages over the existing TES or the likelihood ratio test from the three-parameter weight function model, I turn to Monte Carlo simulations.
+For instance, an analyst might prefer to use the fixed effect estimator \(\hat\mu_F\) for the average effect size because it is less biased than the random effects estimator under selective publication, along with the restricted maximum likelihood estimator for \(\tau^2\) because it is less biased than the maximum likelihood estimator (cf.~Henmi \& Copas, 2010; Stanley \& Doucouliagos, 2015).
+It is known that the parametric score test and likelihood ratio test have equivalent power, asymptotically, under a fixed alternative model (Rao, 2005).
+Beyond that, however, it is difficult to determine which test is optimal.
+To investigate whether either the parametric or robust test offers advantages over the existing TES or the likelihood ratio test from the three-parameter weight function model, and whether \(\hat\mu_F\) offers any advantage over the use of random effects maximum likelihood estimation, I turn to Monte Carlo simulations.
 
 \hypertarget{simulations}{%
 \section{Size and power comparisons}\label{simulations}}
@@ -405,6 +407,9 @@ Morey, R. D. (2013). The consistency test does notand cannotDeliver what is adve
 
 \leavevmode\hypertarget{ref-rao1948LargeSampleTests}{}%
 Rao, C. R. (1948). Large sample tests of statistical hypotheses concerning several parameters with applications to problems of estimation. \emph{Mathematical Proceedings of the Cambridge Philosophical Society}, \emph{44}(01), 50. doi:\href{https://doi.org/10.1017/S0305004100023987}{10.1017/S0305004100023987}
+
+\leavevmode\hypertarget{ref-rao2005ScoreTestHistorical}{}%
+Rao, C. R. (2005). Score Test: Historical Review and Recent Developments. In N. Balakrishnan, H. N. Nagaraja, \& N. Kannan (Eds.), \emph{Advances in Ranking and Selection, Multiple Comparisons, and Reliability: Methodology and Applications} (pp. 3--20). Boston, MA: Birkhäuser Boston. doi:\href{https://doi.org/10.1007/0-8176-4422-9_1}{10.1007/0-8176-4422-9\_1}
 
 \leavevmode\hypertarget{ref-stanley2015NeitherFixedRandom}{}%
 Stanley, T. D., \& Doucouliagos, H. (2015). Neither fixed nor random: Weighted least squares meta-analysis. \emph{Statistics in Medicine}, \emph{34}(13), 2116--2127. doi:\href{https://doi.org/10.1002/sim.6481}{10.1002/sim.6481}

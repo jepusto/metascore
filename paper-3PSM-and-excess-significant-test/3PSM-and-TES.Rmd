@@ -75,7 +75,7 @@ Under a random effects model, and in the absence of selective publication, the t
 Let $\alpha$ denote the conventional type-I error level used for one-sided hypothesis tests; in areas of research that typically use two-sided tests and the .05 level to determine significance, the one-sided level would be $\alpha = .025$. 
 Let $\Phi(x)$ and $\phi(x)$ denote the standard normal cumulative distribution and density function, respectively. 
 Let $z_\alpha$ denote the standard normal $\alpha$-level critical value, that is, $z_\alpha = \Phi^{-1}(1 - \alpha)$. 
-Let $O_i$ be an indicator for the statistical significance of study $i$, so that $O_i = 1$ when $T_i / \sigma_i > \Phi^{-1}(1 - \alpha)$ and $O_i = 0$ otherwise.
+Let $O_i$ be an indicator for the statistical significance of study $i$, so that $O_i = 1$ when $T_i / \sigma_i > z_\alpha$ and $O_i = 0$ otherwise.
 
 ## Test of Excess Significance
 
@@ -252,8 +252,10 @@ Z_R = \frac{E(\acute\mu, \acute\tau^2) - O}{\sqrt{\sum_{i=1}^k F_i^2}}
 and rejecting if $Z_R < \Phi(\alpha_S)$. 
 
 The robust form of the score test is attractive because it can be applied with any of an array of estimators for $\mu$ and $\tau^2$. 
-For instance, an analyst might prefer to use the fixed effect estimator $\hat\mu_F$ for the average effect size because it is less biased than the random effects estimator under selective publication [cf. @henmi2010ConfidenceIntervalsRandom; @stanley2015NeitherFixedRandom], along with the restricted maximum likelihood estimator for $\tau^2$ because it is less biased than the maximum likelihood estimator.
-To determine whether this approach offers any advantage over the use of maximum likelihood estimators, and whether either the parametric or robust test offers advantages over the existing TES or the likelihood ratio test from the three-parameter weight function model, I turn to Monte Carlo simulations. 
+For instance, an analyst might prefer to use the fixed effect estimator $\hat\mu_F$ for the average effect size because it is less biased than the random effects estimator under selective publication, along with the restricted maximum likelihood estimator for $\tau^2$ because it is less biased than the maximum likelihood estimator [cf. @henmi2010ConfidenceIntervalsRandom; @stanley2015NeitherFixedRandom].
+It is known that the parametric score test and likelihood ratio test have equivalent power, asymptotically, under a fixed alternative model [@rao2005ScoreTestHistorical].
+Beyond that, however, it is difficult to determine which test is optimal. 
+To investigate whether either the parametric or robust test offers advantages over the existing TES or the likelihood ratio test from the three-parameter weight function model, and whether $\hat\mu_F$ offers any advantage over the use of random effects maximum likelihood estimation, I turn to Monte Carlo simulations. 
 
 # Size and power comparisons {#simulations}
 
