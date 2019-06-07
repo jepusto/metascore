@@ -72,6 +72,132 @@ r_SMD <- function(studies, mean_effect, sd_effect,
 }
 
 #----------------------------------------------------------------
+# Likelihood ratio test for basic meta-analysis model with no covariates
+#----------------------------------------------------------------
+
+negloglik_3PSM <- function(theta, alpha, y, s, sig) {
+
+  tau_sq <- theta[1]
+
+  mu <- theta[2]
+
+  if (is.null(alpha)) {
+    alpha <- 0.5
+    omega <- 1
+  } else {
+    omega <- theta[3]
+  }
+
+  weight_vec <- if_else(sig, 1, omega)
+  
+  eta_sq <- tau_sq + s^2
+  
+  c_i <- (s * qnorm(1 - alpha) - mu) / sqrt(eta_sq)
+  A_i <- 1 - (1 - omega) * pnorm(c_i)
+  
+  log_lik <- sum(log(weight_vec)) - sum((y - mu)^2 / eta_sq) / 2 - sum(log(eta_sq)) / 2 - sum(log(A_i))
+  
+  -1 * log_lik
+  
+} 
+
+fit_3PSM <- function(y, s, sig,
+                     alpha = .025, 
+                     tau_sq_start = mean(s^2) / 4, 
+                     beta_start = mean(y),
+                     tol = 10^-3, 
+                     method = "L-BFGS-B", 
+                     control = list()) {
+  
+  k <- length(y)
+
+  if (is.null(alpha)) {
+    par <- c(tau_sq_start, beta_start)
+    lower <- c((tol - 1) * min(s)^2, -Inf)
+    upper <- c(Inf, Inf)
+  } else {
+    par <- c(tau_sq_start, beta_start, 1)
+    lower <- c((tol - 1) * min(s)^2, -Inf, tol)  
+    upper <- c(Inf,Inf, 1 / tol)
+  }
+  
+  optim_args <- list(par = par, fn = negloglik_3PSM, 
+                     alpha = alpha, 
+                     y = y, s = s, sig = sig,
+                     method = method,
+                     control = control)
+  
+  if (method == "L-BFGS-B") {
+    optim_args$lower <- lower
+    optim_args$upper <- upper
+  } 
+  
+  do.call(optim, args = optim_args)
+  
+}
+
+LRT_3PSM <- function(mod, 
+                     alpha = .025, 
+                     k_min = 3L, 
+                     tol = 10^-3, 
+                     method = "L-BFGS-B", 
+                     use_gradient = TRUE, 
+                     control = list()) {
+  
+  # count sig and non-sig p-values
+  y <- as.vector(mod$yi)
+  s <- sqrt(mod$vi)
+  p_vals <- pnorm(y / s, lower.tail = FALSE)
+  
+  # adjust alpha
+  sig <- p_vals < alpha
+  sig_tab <- table(sig)
+  
+  if (sig_tab["TRUE"] < k_min) {
+    p_ordered <- sort(p_vals)
+    alpha <- mean(p_ordered[k_min + 0:1])
+    sig <- p_vals < alpha
+  } 
+  
+  if (sig_tab["FALSE"] < k_min) {
+    p_ordered <- sort(p_vals, decreasing = TRUE)
+    alpha <- mean(p_ordered[k_min + 0:1])
+    sig <- p_vals < alpha
+  }
+  
+  # fit random effects model 
+  
+  null_opt <- fit_3PSM(y = y, s = s, sig = sig, 
+                       alpha = NULL,
+                       tau_sq_start = mod$tau2,
+                       beta_start = as.vector(mod$b),
+                       tol = tol, method = method, control = control)
+  
+  
+  # fit selection model
+  
+  VHSM_opt <- fit_3PSM(y = y, s = s, sig = sig, 
+                       alpha = alpha,
+                       tau_sq_start = mod$tau2,
+                       beta_start = as.vector(mod$b),
+                       tol = tol, method = method, control = control)
+  
+  # Likelihood ratio test
+  
+  LRT <- 2 * (null_opt$value - VHSM_opt$value)
+
+  Z_LRT <- sign(VHSM_opt$par[3] - 1) * sqrt(LRT)
+  p_val <- pnorm(Z_LRT)
+  
+  tibble(
+    model = "ML",
+    type = "LRT",
+    Z = Z_LRT,
+    p_val = p_val
+  )
+}
+
+#----------------------------------------------------------------
 # Score tests for basic meta-analysis model with no covariates
 #----------------------------------------------------------------
 
@@ -223,76 +349,46 @@ fit_meta <- function(dat, method = "REML", weights = NULL, max_iter = 100L, step
 }
 
 test_for_selection <- function(dat, alpha = .025, 
+                               methods = c("FE","ML","REML","WLS"),
                                score_types = c("TES-norm","TES-binom","parametric","robust"),
-                               LRT = TRUE) {
+                               LRT = TRUE, k_min = 3L, tol = 10^-3, LRT_method = "L-BFGS-B"
+                               ) {
+  
+  suppressPackageStartupMessages(
+    require(dplyr, quietly = TRUE, warn.conflicts = FALSE)
+  )
+  suppressPackageStartupMessages(
+    require(purrr, quietly = TRUE, warn.conflicts = FALSE)
+  )
+
+  fit_methods <- setdiff(methods, "WLS")
+  
+  if (length(fit_methods) > 0) {
+    mods <- map(fit_methods, ~ fit_meta(dat = dat, method = .))
+    names(mods) <- fit_methods
+  } else {
+    mods <- list()
+  }
+  
+  if ("WLS" %in% methods) {
+    mods <- c(mods, list(WLS = fit_meta(dat, method = "REML", weights = 1 / Va)))
+  }
+  
+  res <- tibble()
+  
+  if (!is.null(score_types)) {
+    score_res <- map_dfr(mods, simple_scores, type = score_types, alpha = alpha, .id = "model")  
+    res <- bind_rows(res, score_res)
+  }
+  
+  if (LRT & "ML" %in% methods) {
+    LRT_res <- LRT_3PSM(mod = mods$ML, alpha = alpha, k_min = k_min, tol = tol, method = LRT_method)
+    res <- bind_rows(res, LRT_res)
+  }
+  
+  res
   
 } 
-
-estimate_effects <- function(dat, 
-                             test_steps = .025, 
-                             score_test_types = NULL,
-                             LRT_types = NULL,
-                             boot_n_sig = FALSE,
-                             boot_qscore = FALSE,
-                             max_iter = 100L,
-                             step_adj = 1L,
-                             tau2_min = -min(dat$Va)) {
-  
-  suppressPackageStartupMessages(require(purrrlyr))
-  
-  rma_ML <- fit_meta_ML(dat, max_iter = max_iter, step_adj = step_adj, tau2_min = tau2_min)
-  rma_FE_REML <- fit_meta_FE_REML(dat, max_iter = max_iter, step_adj = step_adj, tau2_min = tau2_min)
-  
-  mods <- list(ML = rma_ML, `FE-REML` = rma_FE_REML)
-  
-  n_nonsig <- nrow(dat) - n_sig(yi = dat$d, sei = dat$sda, step = test_steps)
-  
-  res <- data_frame()
-  
-  if (!is.null(score_test_types)) {
-    res_score <- 
-      score_test_types %>%
-      invoke_rows(VHSM_score_test, .d = ., model = rma_ML, steps = test_steps, .to = "test_stats") %>%
-      unnest(test_stats) %>%
-      rename(Stat = Score_stat)
-    
-    res <- bind_rows(res, res_score)
-  }
-  
-  if (!is.null(LRT_types)) {
-    res_LRT <-
-      LRT_types %>%
-      invoke_rows(LRT_VHSM, .d = ., model = rma_ML, steps = test_steps, .to = "test_stats") %>%
-      unnest(test_stats) %>%
-      select(-edge_RE, -edge_VHSM, -RE, -VHSM) %>%
-      rename(Stat = LRT) %>%
-      mutate(
-        type = "LRT"
-      )
-  
-    res <- bind_rows(res, res_LRT)    
-  }
-
-  if (boot_n_sig) {
-    res_n_sig <-
-      map_dfr(mods, bootstrap_n_sig, step = test_steps, .id = "info") %>%
-      mutate(two_sided = FALSE, type = "n-sig bootstrap", df = length(test_steps))
-    
-    res <- bind_rows(res, res_n_sig)
-  }
-  
-  if (boot_qscore) {
-    res_qscore <-
-      map_dfr(mods, bootstrap_quick_score, steps = test_steps, .id = "info") %>%
-      mutate(two_sided = TRUE, type = "quick score bootstrap", df = length(test_steps))
-    
-    res <- bind_rows(res, res_qscore)
-  }
-  
-  res %>%
-    mutate(non_sig = n_nonsig)
-  
-}
 
 
 #------------------------------------------------------
@@ -303,11 +399,10 @@ runSim <- function(reps,
                    studies, mean_effect, sd_effect, 
                    n_sim, n_factor = 1L, 
                    p_thresholds = .025, p_RR = 1,
-                   test_steps = .025, 
-                   score_test_types = NULL, 
-                   LRT_types = NULL,
-                   boot_n_sig = FALSE,
-                   boot_qscore = FALSE,
+                   test_alpha = .025, 
+                   methods = c("FE","ML","REML","WLS"),
+                   score_types = c("TES-norm","TES-binom","parametric","robust"),
+                   LRT = TRUE, k_min = 3L, tol = 10^-3, LRT_method = "L-BFGS-B",
                    seed = NULL, ...) {
   
   suppressPackageStartupMessages(require(purrr))
@@ -316,24 +411,20 @@ runSim <- function(reps,
   
   if (!is.null(seed)) set.seed(seed)
   
-  grouping_vars <- union(names(score_test_types), names(LRT_types))
-  
   rerun(reps, {
     r_SMD(studies, mean_effect, sd_effect, n_sim, 
           p_thresholds = p_thresholds, p_RR = p_RR) %>%
-      estimate_effects(test_steps = test_steps, 
-                       score_test_types = score_test_types, 
-                       LRT_types = LRT_types, 
-                       boot_n_sig = boot_n_sig,
-                       boot_qscore = boot_qscore)  
+      test_for_selection(alpha = test_alpha,
+                         methods = methods,
+                         score_types = score_types,
+                         LRT = LRT, k_min = k_min, tol = tol, LRT_method = LRT_method)  
   }) %>%
     bind_rows() %>%
-    group_by_at(.vars = grouping_vars) %>% 
+    group_by(model, type) %>% 
     summarise(
-      pct_all_sig = mean(non_sig == 0),
-      pct_NA = mean(is.na(p_val)),
-      reject_025 = mean(p_val < .025, na.rm = TRUE),
-      reject_050 = mean(p_val < .050, na.rm = TRUE),
-      reject_100 = mean(p_val < .100, na.rm = TRUE)
+      pct_NA = mean(is.na(p)),
+      reject_025 = mean(p < .025, na.rm = TRUE),
+      reject_050 = mean(p < .050, na.rm = TRUE),
+      reject_100 = mean(p < .100, na.rm = TRUE)
     )
 }
