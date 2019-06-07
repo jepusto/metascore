@@ -226,7 +226,7 @@ simple_scores <- function(mod, type = c("TES-norm","TES-binom","parametric","rob
   Expected <- sum(Pwr_i)
   Score_pi <- Expected - Observed
   
-  res <- data.frame()
+  res <- tibble()
   
   # calculate TES
   
@@ -234,21 +234,21 @@ simple_scores <- function(mod, type = c("TES-norm","TES-binom","parametric","rob
     Z_TES <- Score_pi / sqrt(Expected * (k - Expected) / k)
     
     if ("TES-norm" %in% type) {
-      res_TES <- data.frame(
+      res_TES <- tibble(
         type = "TES-norm",
         Z = Z_TES,
-        p = pnorm(Z_TES)
+        p_val = pnorm(Z_TES)
       )
-      res <- rbind(res, res_TES)    
+      res <- bind_rows(res, res_TES)    
     }
     
     if ("TES-binom" %in% type) {
-      res_TES <- data.frame(
+      res_TES <- tibble(
         type = "TES-binom",
         Z = Z_TES,
-        p = pbinom(k - Observed, size = k, prob = 1 - Expected / k)
+        p_val = pbinom(k - Observed, size = k, prob = 1 - Expected / k)
       )
-      res <- rbind(res, res_TES)
+      res <- bind_rows(res, res_TES)
     }
   }
   
@@ -262,28 +262,28 @@ simple_scores <- function(mod, type = c("TES-norm","TES-binom","parametric","rob
     FI_pi <- sum(Pwr_i * (1 - Pwr_i))
     
     dnorm_c_i <- dnorm(c_i)
-    FI_pi_beta <- sum(dnorm_c_i * sqrt(inv_var_i))
-    FI_pi_tausq <- sum(c_i * dnorm_c_i * inv_var_i)
+    FI_pi_beta <- -sum(dnorm_c_i * sqrt(inv_var_i))
+    FI_pi_tausq <- -sum(c_i * dnorm_c_i * inv_var_i) / 2
     
     if ("parametric" %in% type) {
       V_parametric <- FI_pi - FI_pi_beta^2 / FI_beta - FI_pi_tausq^2 / FI_tausq
       Z_parametric = Score_pi / sqrt(V_parametric)
       
-      res_parametric <- data.frame(
+      res_parametric <- tibble(
         type = "parametric",
         Z = Z_parametric,
-        p = pnorm(Z_parametric)
+        p_val = pnorm(Z_parametric)
       )
-      res <- rbind(res, res_parametric)
+      res <- bind_rows(res, res_parametric)
     }
     
     if ("robust" %in% type) {
       
       S_mu_i <- w_i * e_i
       S_tausq_i <- if (mod$method == "ML") {
-        inv_var_i * (e_i^2 * inv_var_i - 1)
+        inv_var_i * (e_i^2 * inv_var_i - 1) / 2
       } else if (mod$method == "REML") { 
-        inv_var_i * (e_i^2 * inv_var_i - 1 + inv_var_i / sum(inv_var_i))
+        inv_var_i * (e_i^2 * inv_var_i - 1 + inv_var_i / sum(inv_var_i)) / 2
       } else {
         0
       }
@@ -292,13 +292,13 @@ simple_scores <- function(mod, type = c("TES-norm","TES-binom","parametric","rob
       V_robust <- sum(F_i^2)
       Z_robust = Score_pi / sqrt(V_robust)
       
-      res_robust <- data.frame(
+      res_robust <- tibble(
         type = "robust",
         Z = Z_robust,
-        p = pnorm(Z_robust)
+        p_val = pnorm(Z_robust)
       )
       
-      res <- rbind(res, res_robust)
+      res <- bind_rows(res, res_robust)
     }
   }
   
@@ -422,9 +422,9 @@ runSim <- function(reps,
     bind_rows() %>%
     group_by(model, type) %>% 
     summarise(
-      pct_NA = mean(is.na(p)),
-      reject_025 = mean(p < .025, na.rm = TRUE),
-      reject_050 = mean(p < .050, na.rm = TRUE),
-      reject_100 = mean(p < .100, na.rm = TRUE)
+      pct_NA = mean(is.na(p_val)),
+      reject_025 = mean(p_val < .025, na.rm = TRUE),
+      reject_050 = mean(p_val < .050, na.rm = TRUE),
+      reject_100 = mean(p_val < .100, na.rm = TRUE)
     )
 }

@@ -183,7 +183,7 @@ $$
 $$
 where $\mathbb{E}$ denotes the expectation over $T_1,...,T_k$, and denote $\tilde{\mathcal{I}}_R = \mathcal{I}(\hat\mu_R, \hat\tau^2_R, 1)$. The parametric score test statistic is then given by 
 $$
-X^2_P = \bm{\tilde{S}}_R'\tilde{\mathcal{I}}_R \bm{\tilde{S}}_R.
+X^2_P = \bm{\tilde{S}}_R'\tilde{\mathcal{I}}_R^{-1} \bm{\tilde{S}}_R.
 $$
 This quantity can be expressed more directly as: 
 \begin{equation}
