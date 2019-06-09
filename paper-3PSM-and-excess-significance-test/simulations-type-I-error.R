@@ -67,7 +67,7 @@ tm <- system.time(
 )
 
 tm
-(8000 / unique(results$reps)) * (tm[[3]] / 60^2)
+cat("Projected time:", (8000 / unique(results$reps)) * (tm[[3]] / 60^2), "hours")
 
 #--------------------------------------------------------
 # run simulations in parallel - mdply
