@@ -145,21 +145,22 @@ LRT_3PSM <- function(mod,
                      control = list()) {
   
   # count sig and non-sig p-values
+  k <- mod$k
   y <- as.vector(mod$yi)
   s <- sqrt(mod$vi)
   p_vals <- pnorm(y / s, lower.tail = FALSE)
   
   # adjust alpha
   sig <- p_vals < alpha
-  sig_tab <- table(sig)
+  n_sig <- sum(sig)
   
-  if (sig_tab["TRUE"] < k_min) {
+  if (n_sig < k_min) {
     p_ordered <- sort(p_vals)
     alpha <- mean(p_ordered[k_min + 0:1])
     sig <- p_vals < alpha
   } 
   
-  if (sig_tab["FALSE"] < k_min) {
+  if ((k - n_sig) < k_min) {
     p_ordered <- sort(p_vals, decreasing = TRUE)
     alpha <- mean(p_ordered[k_min + 0:1])
     sig <- p_vals < alpha
@@ -192,6 +193,7 @@ LRT_3PSM <- function(mod,
   tibble(
     model = "ML",
     type = "LRT",
+    sig = n_sig / k,
     Z = Z_LRT,
     p_val = p_val
   )
@@ -423,6 +425,8 @@ runSim <- function(reps,
     group_by(model, type) %>% 
     summarise(
       pct_NA = mean(is.na(p_val)),
+      pct_no_sig = mean(sig==0),
+      pct_all_sig = mean(sig==1),
       reject_025 = mean(p_val < .025, na.rm = TRUE),
       reject_050 = mean(p_val < .050, na.rm = TRUE),
       reject_100 = mean(p_val < .100, na.rm = TRUE)
