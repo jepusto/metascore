@@ -11,11 +11,11 @@ library(tidyverse)
 set.seed(20190609)
 
 design_factors <- list(
-  studies = c(20, 40, 80, 120),
-  mean_effect = seq(0, 1.2, 0.1), 
+  studies = c(40, 80, 120),
+  mean_effect = c(0.0, 0.2, 0.4, 0.8), 
   sd_effect = c(0.0, 0.2, 0.4),
   p_thresholds = .025, 
-  p_RR = 1
+  p_RR = c(seq(0, 0.1, 0.02), seq(0.2, 0.9, 0.1))
 )
 
 lengths(design_factors)
@@ -84,4 +84,4 @@ session_info <- sessionInfo()
 run_date <- date()
 
 save(params, results, session_info, run_date, 
-     file = "paper-3PSM-and-excess-significance-test/Type-I-error-results.Rdata")
+     file = "paper-3PSM-and-excess-significance-test/Power-results.Rdata")

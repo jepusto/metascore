@@ -138,7 +138,7 @@ fit_3PSM <- function(y, s, sig,
 
 LRT_3PSM <- function(mod, 
                      alpha = .025, 
-                     k_min = 3L, 
+                     k_min = 2L, 
                      tol = 10^-3, 
                      method = "L-BFGS-B", 
                      use_gradient = TRUE, 
@@ -404,7 +404,7 @@ runSim <- function(reps,
                    test_alpha = .025, 
                    methods = c("FE","ML","REML","WLS"),
                    score_types = c("TES-norm","TES-binom","parametric","robust"),
-                   LRT = TRUE, k_min = 3L, tol = 10^-3, LRT_method = "L-BFGS-B",
+                   LRT = TRUE, k_min = 2L, tol = 10^-3, LRT_method = "L-BFGS-B",
                    seed = NULL, ...) {
   
   suppressPackageStartupMessages(require(purrr))
