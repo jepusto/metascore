@@ -8,7 +8,7 @@ source_obj <- ls()
 #--------------------------------------------------------
 library(tidyverse)
 
-set.seed(20190609)
+set.seed(20190611)
 
 design_factors <- list(
   studies = c(40, 80, 120),
@@ -24,7 +24,7 @@ prod(lengths(design_factors))
 params <- 
   cross_df(design_factors) %>%
   mutate(
-    reps = 20,
+    reps = 8000,
     seed = round(runif(1) * 2^30) + row_number()
   ) %>%
   sample_frac()
@@ -43,13 +43,12 @@ tm <- system.time(
   results <- 
     params %>%
     mutate(
-      res = future_pmap(., .f = runSim, 
+      res = future_pmap(., .f = possibly(runSim, NULL), 
                         n_sim = n_beta(20,100,1,1.5),
                         methods = c("FE","ML","REML","WLS"),
                         score_types = c("TES-norm","TES-binom","parametric","robust"),
                         LRT = TRUE, k_min = 2L)
-    ) %>%
-    unnest()
+    ) 
 )
 
 tm
