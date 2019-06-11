@@ -353,7 +353,7 @@ fit_meta <- function(dat, method = "REML", weights = NULL, max_iter = 100L, step
 test_for_selection <- function(dat, alpha = .025, 
                                methods = c("FE","ML","REML","WLS"),
                                score_types = c("TES-norm","TES-binom","parametric","robust"),
-                               LRT = TRUE, k_min = 3L, tol = 10^-3, LRT_method = "L-BFGS-B"
+                               LRT = TRUE, k_min = 2L, tol = 10^-3, LRT_method = "L-BFGS-B"
                                ) {
   
   suppressPackageStartupMessages(
@@ -379,12 +379,17 @@ test_for_selection <- function(dat, alpha = .025,
   res <- tibble()
   
   if (!is.null(score_types)) {
-    score_res <- map_dfr(mods, simple_scores, type = score_types, alpha = alpha, .id = "model")  
+    score_res <- map_dfr(mods, possibly(simple_scores, otherwise = tibble(type = score_types, Z = NA, p_val = NA)),
+                         type = score_types, alpha = alpha, .id = "model")  
     res <- bind_rows(res, score_res)
   }
   
   if (LRT & "ML" %in% methods) {
-    LRT_res <- LRT_3PSM(mod = mods$ML, alpha = alpha, k_min = k_min, tol = tol, method = LRT_method)
+    possibly_LRT_3PSM <- possibly(LRT_3PSM, 
+                                  otherwise = tibble(model = "ML", type = "LRT", 
+                                                     sig = mean(pnorm(dat$g / dat$sda, lower.tail = FALSE) < alpha), 
+                                                     Z = NA, p_val = NA))
+    LRT_res <- possibly_LRT_3PSM(mod = mods$ML, alpha = alpha, k_min = k_min, tol = tol, method = LRT_method)
     res <- bind_rows(res, LRT_res)
   }
   
