@@ -412,7 +412,7 @@ runSim <- function(reps,
   suppressPackageStartupMessages(require(tidyr))
   
   if (!is.null(seed)) set.seed(seed)
-  
+ 
   rerun(reps, {
     r_SMD(studies, mean_effect, sd_effect, n_sim, 
           p_thresholds = p_thresholds, p_RR = p_RR) %>%
