@@ -47,7 +47,7 @@ tm <- system.time(
                         n_sim = n_beta(20,100,1,1.5),
                         methods = c("FE","ML","REML","WLS"),
                         score_types = c("TES-norm","TES-binom","parametric","robust"),
-                        LRT = TRUE, k_min = 2L)
+                        tweak = tweak, LRT = TRUE, k_min = 2L)
     )
 )
 
@@ -68,7 +68,7 @@ cat("Projected time:", formatC((8000 / unique(results$reps)) * (tm[[3]] / 60^2),
 #                          n_sim = n_beta(20,100,1,1.5), 
 #                          methods = c("FE","ML","REML","WLS"),
 #                          score_types = c("TES-norm","TES-binom","parametric","robust"),
-#                          LRT = TRUE, k_min = 2L, 
+#                          tweak = tweak, LRT = TRUE, k_min = 2L, 
 #                          .parallel = TRUE)
 # )
 # 
@@ -85,4 +85,3 @@ run_date <- date()
 
 save(params, results, session_info, run_date, 
      file = "paper-3PSM-and-excess-significance-test/Type-I-error-results.Rdata")
-

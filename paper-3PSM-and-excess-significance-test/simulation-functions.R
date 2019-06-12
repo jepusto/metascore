@@ -72,6 +72,29 @@ r_SMD <- function(studies, mean_effect, sd_effect,
 }
 
 #----------------------------------------------------------------
+# Calculate adjusted alpha
+#----------------------------------------------------------------
+
+tweak_alpha <- function(p_vals, alpha, k_min = 2L) {
+
+  # adjust alpha
+  sig <- p_vals < alpha
+  n_sig <- sum(sig)
+  
+  if (n_sig < k_min) {
+    p_ordered <- sort(p_vals)
+    alpha <- mean(p_ordered[k_min + 0:1])
+  } 
+  
+  if ((length(p_vals) - n_sig) < k_min) {
+    p_ordered <- sort(p_vals, decreasing = TRUE)
+    alpha <- mean(p_ordered[k_min + 0:1])
+  }
+  
+  alpha
+}
+
+#----------------------------------------------------------------
 # Likelihood ratio test for basic meta-analysis model with no covariates
 #----------------------------------------------------------------
 
@@ -149,22 +172,11 @@ LRT_3PSM <- function(mod,
   y <- as.vector(mod$yi)
   s <- sqrt(mod$vi)
   p_vals <- pnorm(y / s, lower.tail = FALSE)
+  n_sig <- sum(p_vals < alpha)
   
   # adjust alpha
+  alpha <- tweak_alpha(p_vals, alpha = alpha, k_min = k_min) 
   sig <- p_vals < alpha
-  n_sig <- sum(sig)
-  
-  if (n_sig < k_min) {
-    p_ordered <- sort(p_vals)
-    alpha <- mean(p_ordered[k_min + 0:1])
-    sig <- p_vals < alpha
-  } 
-  
-  if ((k - n_sig) < k_min) {
-    p_ordered <- sort(p_vals, decreasing = TRUE)
-    alpha <- mean(p_ordered[k_min + 0:1])
-    sig <- p_vals < alpha
-  }
   
   # fit random effects model 
   
@@ -353,6 +365,7 @@ fit_meta <- function(dat, method = "REML", weights = NULL, max_iter = 100L, step
 test_for_selection <- function(dat, alpha = .025, 
                                methods = c("FE","ML","REML","WLS"),
                                score_types = c("TES-norm","TES-binom","parametric","robust"),
+                               tweak = c("no","yes"),
                                LRT = TRUE, k_min = 2L, tol = 10^-3, LRT_method = "L-BFGS-B"
                                ) {
   
@@ -373,15 +386,25 @@ test_for_selection <- function(dat, alpha = .025,
   }
   
   if ("WLS" %in% methods) {
-    mods <- c(mods, list(WLS = fit_meta(dat, method = "REML", weights = 1 / Va)))
+    mods <- c(mods, list(WLS = fit_meta(dat, method = "REML", weights = 1 / Va, tau2_min = 0)))
   }
   
   res <- tibble()
   
-  if (!is.null(score_types)) {
+  if (!is.null(score_types) & "no" %in% tweak) {
     score_res <- map_dfr(mods, possibly(simple_scores, otherwise = tibble(type = score_types, Z = NA, p_val = NA)),
                          type = score_types, alpha = alpha, .id = "model")  
     res <- bind_rows(res, score_res)
+  }
+  
+  if (!is.null(score_types) & "yes" %in% tweak) {
+    alpha_tweak <- tweak_alpha(p_vals = pnorm(dat$g / dat$sda, lower.tail = FALSE), 
+                               alpha = alpha, k_min = k_min) 
+    
+    tweak_res <- map_dfr(mods, possibly(simple_scores, otherwise = tibble(type = score_types, Z = NA, p_val = NA)),
+                         type = score_types, alpha = alpha_tweak, .id = "model")  
+    tweak_res$type <- paste(tweak_res$type, "tweaked", sep = "-")
+    res <- bind_rows(res, tweak_res)
   }
   
   if (LRT & "ML" %in% methods) {
@@ -409,6 +432,7 @@ runSim <- function(reps,
                    test_alpha = .025, 
                    methods = c("FE","ML","REML","WLS"),
                    score_types = c("TES-norm","TES-binom","parametric","robust"),
+                   tweak = c("no","yes"),
                    LRT = TRUE, k_min = 2L, tol = 10^-3, LRT_method = "L-BFGS-B",
                    seed = NULL, ...) {
   
@@ -423,7 +447,7 @@ runSim <- function(reps,
           p_thresholds = p_thresholds, p_RR = p_RR) %>%
       test_for_selection(alpha = test_alpha,
                          methods = methods,
-                         score_types = score_types,
+                         score_types = score_types, tweak = tweak,
                          LRT = LRT, k_min = k_min, tol = tol, LRT_method = LRT_method)  
   }) %>%
     bind_rows() %>%
