@@ -8,7 +8,7 @@ source_obj <- ls()
 #--------------------------------------------------------
 library(tidyverse)
 
-set.seed(20190610)
+set.seed(20190614)
 
 design_factors <- list(
   studies = c(20, 40, 80, 120),

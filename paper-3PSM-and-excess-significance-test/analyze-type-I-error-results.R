@@ -23,7 +23,7 @@ ggplot(non_convergence_rates, aes(mean_effect, pct_NA, color = studies_fac, line
   theme_light()
 
 #----------------------------
-# non-convergence rates
+# Uniform significance
 #----------------------------
 
 uniformity_rates <-
@@ -89,6 +89,7 @@ LRT_alphas <-
 ggplot(LRT, aes(mean_effect, reject_rate, color = studies_fac, linetype = studies_fac, shape = studies_fac)) +
   geom_line() + 
   geom_point() +
+  expand_limits(y = 0) + 
   geom_hline(data = LRT_alphas, aes(yintercept = alpha)) + 
   facet_grid(alpha ~ sd_effect, scales = "free_y") + 
   theme_light()
@@ -106,6 +107,7 @@ ggplot(score_parametric, aes(mean_effect, reject_025, color = studies_fac, linet
   geom_line() + 
   geom_point() +
   geom_hline(yintercept = .025) + 
+  expand_limits(y = 0) + 
   facet_grid(sd_effect ~ model, scales = "free_y") + 
   theme_light()
 
@@ -113,6 +115,7 @@ ggplot(score_parametric, aes(mean_effect, reject_050, color = studies_fac, linet
   geom_line() + 
   geom_point() +
   geom_hline(yintercept = .050) + 
+  expand_limits(y = 0) + 
   facet_grid(sd_effect ~ model, scales = "free_y") + 
   theme_light()
 
@@ -120,6 +123,35 @@ ggplot(score_parametric, aes(mean_effect, reject_100, color = studies_fac, linet
   geom_line() + 
   geom_point() +
   geom_hline(yintercept = .100) + 
+  expand_limits(y = 0) + 
+  facet_grid(sd_effect ~ model, scales = "free_y") + 
+  theme_light()
+
+score_parametric <- 
+  results_wide %>%
+  filter(type == "parametric-tweaked", model != "FE")
+
+ggplot(score_parametric, aes(mean_effect, reject_025, color = studies_fac, linetype = studies_fac, shape = studies_fac)) +
+  geom_line() + 
+  geom_point() +
+  geom_hline(yintercept = .025) + 
+  expand_limits(y = 0) + 
+  facet_grid(sd_effect ~ model, scales = "free_y") + 
+  theme_light()
+
+ggplot(score_parametric, aes(mean_effect, reject_050, color = studies_fac, linetype = studies_fac, shape = studies_fac)) +
+  geom_line() + 
+  geom_point() +
+  geom_hline(yintercept = .050) + 
+  expand_limits(y = 0) + 
+  facet_grid(sd_effect ~ model, scales = "free_y") + 
+  theme_light()
+
+ggplot(score_parametric, aes(mean_effect, reject_100, color = studies_fac, linetype = studies_fac, shape = studies_fac)) +
+  geom_line() + 
+  geom_point() +
+  geom_hline(yintercept = .100) + 
+  expand_limits(y = 0) + 
   facet_grid(sd_effect ~ model, scales = "free_y") + 
   theme_light()
 
@@ -136,6 +168,7 @@ ggplot(score_robust, aes(mean_effect, reject_025, color = studies_fac, linetype 
   geom_line() + 
   geom_point() +
   geom_hline(yintercept = .025) + 
+  expand_limits(y = 0) + 
   facet_grid(sd_effect ~ model, scales = "free_y") + 
   theme_light()
 
@@ -143,6 +176,7 @@ ggplot(score_robust, aes(mean_effect, reject_050, color = studies_fac, linetype 
   geom_line() + 
   geom_point() +
   geom_hline(yintercept = .050) + 
+  expand_limits(y = 0) + 
   facet_grid(sd_effect ~ model, scales = "free_y") + 
   theme_light()
 
@@ -150,9 +184,37 @@ ggplot(score_robust, aes(mean_effect, reject_100, color = studies_fac, linetype 
   geom_line() + 
   geom_point() +
   geom_hline(yintercept = .100) + 
+  expand_limits(y = 0) + 
   facet_grid(sd_effect ~ model, scales = "free_y") + 
   theme_light()
 
+score_robust <- 
+  results_wide %>%
+  filter(type == "robust-tweaked", model != "FE")
+
+ggplot(score_robust, aes(mean_effect, reject_025, color = studies_fac, linetype = studies_fac, shape = studies_fac)) +
+  geom_line() + 
+  geom_point() +
+  geom_hline(yintercept = .025) + 
+  expand_limits(y = 0) + 
+  facet_grid(sd_effect ~ model, scales = "free_y") + 
+  theme_light()
+
+ggplot(score_robust, aes(mean_effect, reject_050, color = studies_fac, linetype = studies_fac, shape = studies_fac)) +
+  geom_line() + 
+  geom_point() +
+  geom_hline(yintercept = .050) + 
+  expand_limits(y = 0) + 
+  facet_grid(sd_effect ~ model, scales = "free_y") + 
+  theme_light()
+
+ggplot(score_robust, aes(mean_effect, reject_100, color = studies_fac, linetype = studies_fac, shape = studies_fac)) +
+  geom_line() + 
+  geom_point() +
+  geom_hline(yintercept = .100) + 
+  expand_limits(y = 0) + 
+  facet_grid(sd_effect ~ model, scales = "free_y") + 
+  theme_light()
 
 #----------------------------
 # compare tests
