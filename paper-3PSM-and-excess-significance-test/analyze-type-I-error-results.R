@@ -224,7 +224,7 @@ tests_selected <-
   results_wide %>%
   filter(type=="LRT" | 
            (type=="parametric" & model == "ML") | 
-           (type %in% c("robust","TES-binom","TES-norm") & model == "WLS"))
+           (type %in% c("robust-tweaked","TES-binom","TES-norm") & model == "WLS"))
 
 ggplot(tests_selected, aes(mean_effect, reject_025, color = studies_fac, shape = studies_fac)) +
   geom_line() + 

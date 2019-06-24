@@ -269,9 +269,7 @@ simple_scores <- function(mod, type = c("TES-norm","TES-binom","parametric","rob
   if (any(c("parametric","robust") %in% type)) {
     
     FI_beta <- sum(w_i) # same as 1 / mod$se^2
-    
-    # NOTE: needs to be something else if method != "ML"
-    FI_tausq <- sum(inv_var_i^2) / 2 # same as 1 / mod$se.tausq^2
+    FI_tausq <- 1 / mod$se.tau2^2
     
     FI_pi <- sum(Pwr_i * (1 - Pwr_i))
     
